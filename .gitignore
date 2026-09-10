@@ -1,0 +1,11 @@
+# binaries
+*.bin
+*.o
+
+# os
+Thumbs.db
+.DS_STORE
+
+# env
+.env
+*.env
