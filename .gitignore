@@ -11,6 +11,4 @@ Thumbs.db
 *.env
 
 # builds
-build/
-dist/
 *.img
