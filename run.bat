@@ -16,10 +16,26 @@ echo Compiling terminal.c...
 i686-elf-gcc -ffreestanding -c boot/terminal.c -o boot/terminal.o
 if errorlevel 1 goto :error
 
+echo Compiling idt.c...
+i686-elf-gcc -ffreestanding -c boot/idt.c -o boot/idt.o
+if errorlevel 1 goto :error
+
+echo Compiling isr.c...
+i686-elf-gcc -ffreestanding -c boot/isr.c -o boot/isr.o
+if errorlevel 1 goto :error
+
+echo Assembling isr.asm...
+nasm -f elf32 boot/isr.asm -o boot/isr_asm.o
+if errorlevel 1 goto :error
+
+echo Assembling idt_load.asm...
+nasm -f elf32 boot/idt_load.asm -o boot/idt_load.o
+if errorlevel 1 goto :error
+
 if not exist build mkdir build
 
 echo Linking stage2.o, kernel.o, and terminal.o...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf boot/stage2.o boot/kernel.o boot/terminal.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf boot/stage2.o boot/kernel.o boot/terminal.o boot/idt.o boot/isr.o boot/isr_asm.o boot/idt_load.o
 if errorlevel 1 goto :error
 
 echo Converting to flat binary...
