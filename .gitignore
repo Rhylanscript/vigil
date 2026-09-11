@@ -1,6 +1,7 @@
 # binaries
 *.bin
 *.o
+*.elf
 
 # os
 Thumbs.db
@@ -11,4 +12,6 @@ Thumbs.db
 *.env
 
 # builds
+build/
 *.img
+!build/.gitkeep
