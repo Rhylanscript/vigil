@@ -1,9 +1,9 @@
 ; stage2.asm
 ; stage 2 of bootloader. for now, just confirms it loaded and ran correctly
 
-[org 0x7e00]
 [bits 16]
 
+global stage2_start
 jmp stage2_start
 
 %include "boot/a20.asm"
@@ -53,25 +53,15 @@ protected_mode_start:
 
 .clear_loop:
     mov word [edi], 0x0f20
-
     add edi, 2
     loop .clear_loop
 
-    mov edi, 0xb8000
-
-    mov al, 'V'
-    mov ah, 0x0f
-    mov [edi], ax
-    mov al, 'I'
-    mov [edi+2], ax
-    mov al, 'G'
-    mov [edi+4], ax
-    mov al, 'I'
-    mov [edi+6], ax
-    mov al, 'L'
-    mov [edi+8], ax
+    extern kernel_main
+    call kernel_main
 
     jmp $
+    ; safety net - kernel_main shouldnt return but if it does
+    ; stop here
 
 print_string:
     lodsb
@@ -86,7 +76,3 @@ print_string:
 msg_stage2 db 'VIGIL: stage 2 online', 13, 10, 0
 msg_a20_ok db 'VIGIL: A20 enabled', 13, 10, 0
 msg_a20_fail db 'VIGIL: A20 FAILED', 13, 10, 0
-
-times 2048-($-$$) db 0
-; pad Stage 2 out to exactly 2048 bytes as this needs to match the sector
-; count boot.asm asks the BIOS to read
