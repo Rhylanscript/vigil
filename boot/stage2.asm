@@ -3,6 +3,7 @@
 
 [bits 16]
 
+global stage2_start
 jmp stage2_start
 
 %include "boot/a20.asm"
