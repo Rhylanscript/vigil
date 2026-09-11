@@ -7,6 +7,7 @@
 jmp stage2_start
 
 %include "boot/a20.asm"
+%include "boot/gdt.asm"
 
 stage2_start:
     mov si, msg_stage2
@@ -24,6 +25,52 @@ stage2_start:
 .a20_ok:
     mov si, msg_a20_ok
     call print_string
+
+    cli
+
+    lgdt [gdt_descriptor]
+
+    mov eax, cr0
+    or eax, 1
+    mov cr0, eax
+
+    jmp CODE_SEG:protected_mode_start
+
+[bits 32]
+
+protected_mode_start:
+    mov ax, DATA_SEG
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    mov esp, 0x90000
+
+    mov edi, 0xb8000
+    mov ecx, 80 * 25
+
+.clear_loop:
+    mov word [edi], 0x0f20
+
+    add edi, 2
+    loop .clear_loop
+
+    mov edi, 0xb8000
+
+    mov al, 'V'
+    mov ah, 0x0f
+    mov [edi], ax
+    mov al, 'I'
+    mov [edi+2], ax
+    mov al, 'G'
+    mov [edi+4], ax
+    mov al, 'I'
+    mov [edi+6], ax
+    mov al, 'L'
+    mov [edi+8], ax
+
     jmp $
 
 print_string:
