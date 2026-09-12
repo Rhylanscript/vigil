@@ -11,6 +11,10 @@ SECTIONS
         build/isr_asm.o(.text)
         build/idt.o(.text)
         build/idt_load.o(.text)
+        build/pic.o(.text)
+        build/irq.o(.text)
+        build/irq_asm.o(.text)
+        build/keyboard.o(.text)
     }
 
     .rodata : {
@@ -20,6 +24,10 @@ SECTIONS
         build/isr.o(.rodata)
         build/idt.o(.rodata)
         build/idt_load.o(.rodata)
+        build/pic.o(.rodata)
+        build/irq.o(.rodata)
+        build/irq_asm.o(.rodata)
+        build/keyboard.o(.rodata)
     }
 
     .data : {
@@ -29,6 +37,10 @@ SECTIONS
         build/isr.o(.data)
         build/idt.o(.data)
         build/idt_load.o(.data)
+        build/pic.o(.data)
+        build/irq.o(.data)
+        build/irq_asm.o(.data)
+        build/keyboard.o(.data)
     }
 
     .bss : {
@@ -38,5 +50,9 @@ SECTIONS
         build/isr.o(.bss)
         build/idt.o(.bss)
         build/idt_load.o(.bss)
+        build/pic.o(.bss)
+        build/irq.o(.bss)
+        build/irq_asm.o(.bss)
+        build/keyboard.o(.bss)
     }
 }
