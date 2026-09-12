@@ -5,38 +5,38 @@ SECTIONS
     . = 0x7e00;
 
     .text : {
-        boot/stage2.o(.text)
-        boot/kernel.o(.text)
-        boot/terminal.o(.text)
-        boot/isr_asm.o(.text)
-        boot/idt.o(.text)
-        boot/idt_load.o(.text)
+        build/stage2.o(.text)
+        build/kernel.o(.text)
+        build/terminal.o(.text)
+        build/isr_asm.o(.text)
+        build/idt.o(.text)
+        build/idt_load.o(.text)
     }
 
     .rodata : {
-        boot/stage2.o(.rodata)
-        boot/kernel.o(.rodata)
-        boot/terminal.o(.rodata)
-        boot/isr.o(.rodata)
-        boot/idt.o(.rodata)
-        boot/idt_load.o(.rodata)
+        build/stage2.o(.rodata)
+        build/kernel.o(.rodata)
+        build/terminal.o(.rodata)
+        build/isr.o(.rodata)
+        build/idt.o(.rodata)
+        build/idt_load.o(.rodata)
     }
 
     .data : {
-        boot/stage2.o(.data)
-        boot/kernel.o(.data)
-        boot/terminal.o(.data)
-        boot/isr.o(.data)
-        boot/idt.o(.data)
-        boot/idt_load.o(.data)
+        build/stage2.o(.data)
+        build/kernel.o(.data)
+        build/terminal.o(.data)
+        build/isr.o(.data)
+        build/idt.o(.data)
+        build/idt_load.o(.data)
     }
 
     .bss : {
-        boot/stage2.o(.bss)
-        boot/kernel.o(.bss)
-        boot/terminal.o(.bss)
-        boot/isr.o(.bss)
-        boot/idt.o(.bss)
-        boot/idt_load.o(.bss)
+        build/stage2.o(.bss)
+        build/kernel.o(.bss)
+        build/terminal.o(.bss)
+        build/isr.o(.bss)
+        build/idt.o(.bss)
+        build/idt_load.o(.bss)
     }
 }
