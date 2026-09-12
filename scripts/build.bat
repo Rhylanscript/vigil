@@ -40,10 +40,26 @@ echo Assembling idt_load.asm...
 nasm -f elf32 boot/idt_load.asm -o build/idt_load.o
 if errorlevel 1 goto :error
 
+echo Compiling pic.c...
+i686-elf-gcc -ffreestanding -c boot/pic.c -o build/pic.o
+if errorlevel 1 goto :error
+
+echo Compiling irq.c...
+i686-elf-gcc -ffreestanding -c boot/irq.c -o build/irq.o
+if errorlevel 1 goto :error
+
+echo Assembling irq.asm...
+nasm -f elf32 boot/irq.asm -o build/irq_asm.o
+if errorlevel 1 goto :error
+
+echo Compiling keyboard.c...
+i686-elf-gcc -ffreestanding -c boot/keyboard.c -o build/keyboard.o
+if errorlevel 1 goto :error
+
 echo Beginning img build...
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o
 if errorlevel 1 goto :error
 
 echo Converting to flat binary...
