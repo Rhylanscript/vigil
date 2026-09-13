@@ -14,9 +14,24 @@ static void print_prompt(void) {
     terminal_print("VIGIL > ");
 }
 
-static void execute_command(const char* command) {
-    if (kstrcmp(command, "") == 0) {
+static void execute_command(char* line) {
+    if (kstrcmp(line, "") == 0) {
         return;
+    }
+
+    int i = 0;
+    while (line[i] != '\0' && line[i] != ' ') {
+        i++;
+    }
+
+    char had_space = (line[i] == ' ');
+    line[i] = '\0';
+
+    char* command = line;
+    char* args = had_space ? &line[i + 1] : &line[i];
+
+    while (*args == ' ') {
+        args++;
     }
 
     if (kstrcmp(command, "help") == 0) {
@@ -34,8 +49,8 @@ static void execute_command(const char* command) {
         return;
     }
 
-    if (kstrncmp(command, "recall ", 7) == 0) {
-        terminal_print(command + 7);
+    if (kstrcmp(command, "recall") == 0) {
+        terminal_print(args);
         terminal_print("\n");
         return;
     }
