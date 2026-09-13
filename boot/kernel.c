@@ -6,6 +6,7 @@
 #include "pic.h"
 #include "keyboard.h"
 #include "io.h"
+#include "shell.h"
 
 void kernel_main(void) {
     terminal_initialize();
@@ -18,7 +19,8 @@ void kernel_main(void) {
     irq_install();
     keyboard_install();
     enable_interrupts();
-    terminal_print("Keyboard ready - type something:\n");
+
+    shell_init();
 
     for (;;) {
         __asm__ volatile ("hlt");

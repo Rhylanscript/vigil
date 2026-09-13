@@ -15,3 +15,6 @@ Thumbs.db
 build/
 *.img
 !build/.gitkeep
+
+# private
+.private/
