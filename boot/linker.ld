@@ -15,8 +15,6 @@ SECTIONS
         build/irq.o(.text)
         build/irq_asm.o(.text)
         build/keyboard.o(.text)
-        build/shell.o(.text)
-        build/kstring.o(.text)
     }
 
     .rodata : {
@@ -30,8 +28,6 @@ SECTIONS
         build/irq.o(.rodata)
         build/irq_asm.o(.rodata)
         build/keyboard.o(.rodata)
-        build/shell.o(.rodata)
-        build/kstring.o(.rodata)
     }
 
     .data : {
@@ -45,8 +41,6 @@ SECTIONS
         build/irq.o(.data)
         build/irq_asm.o(.data)
         build/keyboard.o(.data)
-        build/shell.o(.data)
-        build/kstring.o(.data)
     }
 
     .bss : {
@@ -60,7 +54,5 @@ SECTIONS
         build/irq.o(.bss)
         build/irq_asm.o(.bss)
         build/keyboard.o(.bss)
-        build/shell.o(.bss)
-        build/kstring.o(.bss)
     }
 }
