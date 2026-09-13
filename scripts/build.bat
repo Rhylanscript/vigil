@@ -8,7 +8,7 @@ if not exist "build" (
     mkdir "build"
 )
 
-set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers
+set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers -Iboot/shell -Iboot/lib
 
 echo Assembling boot.asm...
 nasm -f bin boot/boot.asm -o build/boot.bin
@@ -58,10 +58,18 @@ echo Compiling keyboard.c...
 i686-elf-gcc %CFLAGS% -c boot/drivers/keyboard.c -o build/keyboard.o
 if errorlevel 1 goto :error
 
+echo Compiling kstring.c...
+i686-elf-gcc %CFLAGS% -c boot/lib/kstring.c -o build/kstring.o
+if errorlevel 1 goto :error
+
+echo Compiling shell.c...
+i686-elf-gcc %CFLAGS% -c boot/shell/shell.c -o build/shell.o
+if errorlevel 1 goto :error
+
 echo Beginning img build...
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o
 if errorlevel 1 goto :error
 
 echo Converting to flat binary...
