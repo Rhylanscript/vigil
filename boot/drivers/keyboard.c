@@ -47,6 +47,11 @@ static const char scancode_to_ascii_shifted[128] = {
 
 static int shift_held = 0;
 static int caps_active = 0;
+static keyboard_handler_t input_handler = 0;
+
+void keyboard_set_handler(keyboard_handler_t handler) {
+    input_handler = handler;
+}
 
 static void keyboard_callback(struct registers regs) {
     (void) regs;
@@ -79,7 +84,11 @@ static void keyboard_callback(struct registers regs) {
 
     char c = use_shifted ? scancode_to_ascii_shifted[scancode] : lower;
     if (c != 0) {
-        terminal_putchar(c);
+        if (input_handler != 0) {
+            input_handler(c);
+        } else {
+            terminal_putchar(c);
+        }
     }
 }
 
