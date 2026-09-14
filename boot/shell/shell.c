@@ -6,6 +6,7 @@
 #include "kstring.h"
 #include "memory.h"
 #include "fs.h"
+#include "timer.h"
 
 #define INPUT_BUFFER_SIZE 128
 
@@ -44,6 +45,7 @@ static void execute_command(char* line) {
         terminal_print("    recall <text>:          Prints <text> to shell\n");
         terminal_print("    status:                 Show a brief description of project\n");
         terminal_print("    cycles:                 Show the total boot counts in memory\n");
+        terminal_print("    uptime:                 Show elapsed time since boot\n");
         terminal_print("    write <name> <text>:    Write <text> text to a specified file\n");
         terminal_print("        under <name>\n");
         terminal_print("    read <name>:            Show contents of file <name>\n");
@@ -75,6 +77,16 @@ static void execute_command(char* line) {
         terminal_print("Boot cycles recorded: ");
         terminal_print(count_str);
         terminal_print("\n");
+        return;
+    }
+
+    if (kstrcmp(command, "uptime") == 0) {
+        uint32_t seconds = timer_get_ticks() / timer_get_frequency();
+        char seconds_str[11];
+        kuitoa(seconds, seconds_str);
+        terminal_print("Uptime: ");
+        terminal_print(seconds_str);
+        terminal_print(" seconds\n");
         return;
     }
 
