@@ -62,6 +62,7 @@ SECTIONS
     }
 
     .bss : {
+        __bss_start = .;
         build/stage2.o(.bss)
         build/kernel.o(.bss)
         build/terminal.o(.bss)
@@ -78,5 +79,6 @@ SECTIONS
         build/vigil_memory.o(.bss)
         build/fs.o(.bss)
         build/timer.o(.bss)
+        __bss_end = .;
     }
 }

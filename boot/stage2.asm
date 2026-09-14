@@ -57,6 +57,17 @@ protected_mode_start:
     loop .clear_loop
 
     extern kernel_main
+    extern __bss_start
+    extern __bss_end
+
+    mov edi, __bss_start
+    mov ecx, __bss_end
+    sub ecx, edi
+    
+    xor eax, eax
+    rep stosb
+    ; repeats store al at [edi] and increment edi ecx times
+
     call kernel_main
 
     jmp $
