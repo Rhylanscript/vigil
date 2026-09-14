@@ -21,6 +21,7 @@ SECTIONS
         build/vigil_memory.o(.text)
         build/fs.o(.text)
         build/timer.o(.text)
+        build/heap.o(.text)
     }
 
     .rodata : {
@@ -40,6 +41,7 @@ SECTIONS
         build/vigil_memory.o(.rodata)
         build/fs.o(.rodata)
         build/timer.o(.rodata)
+        build/heap.o(.rodata)
     }
 
     .data : {
@@ -59,6 +61,7 @@ SECTIONS
         build/vigil_memory.o(.data)
         build/fs.o(.data)
         build/timer.o(.data)
+        build/heap.o(.data)
     }
 
     .bss : {
@@ -79,6 +82,7 @@ SECTIONS
         build/vigil_memory.o(.bss)
         build/fs.o(.bss)
         build/timer.o(.bss)
+        build/heap.o(.bss)
         __bss_end = .;
     }
 }

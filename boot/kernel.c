@@ -10,10 +10,13 @@
 #include "memory.h"
 #include "fs.h"
 #include "timer.h"
+#include "heap.h"
 
 void kernel_main(void) {
     terminal_initialize();
     terminal_print("VIGIL kernel online\n");
+
+    heap_init();
 
     vigil_state_t state;
     vigil_memory_load(&state);
