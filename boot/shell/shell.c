@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "fs.h"
 #include "timer.h"
+#include "heap.h"
 
 #define INPUT_BUFFER_SIZE 128
 
@@ -46,6 +47,7 @@ static void execute_command(char* line) {
         terminal_print("    status:                 Show a brief description of project\n");
         terminal_print("    cycles:                 Show the total boot counts in memory\n");
         terminal_print("    uptime:                 Show elapsed time since boot\n");
+        terminal_print("    meminfo:                Show heap usage\n");
         terminal_print("    write <name> <text>:    Write <text> text to a specified file\n");
         terminal_print("        under <name>\n");
         terminal_print("    read <name>:            Show contents of file <name>\n");
@@ -87,6 +89,24 @@ static void execute_command(char* line) {
         terminal_print("Uptime: ");
         terminal_print(seconds_str);
         terminal_print(" seconds\n");
+        return;
+    }
+
+    if (kstrcmp(command, "meminfo") == 0) {
+        uint32_t total = 0;
+        uint32_t free_bytes = 0;
+        heap_get_stats(&total, &free_bytes);
+
+        char total_str[11];
+        char free_str[11];
+        kuitoa(total, total_str);
+        kuitoa(free_bytes, free_str);
+
+        terminal_print("Heap: ");
+        terminal_print(free_str);
+        terminal_print(" / ");
+        terminal_print(total_str);
+        terminal_print(" bytes free\n");
         return;
     }
 
