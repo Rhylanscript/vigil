@@ -13,4 +13,4 @@ if not exist dist\storage.img (
 )
 
 echo Booting VIGIL in QEMU...
-qemu-system-x86_64 -drive file=dist\vigil.img,format=raw,if=floppy -hda dist\storage.img
+qemu-system-x86_64 -drive file=dist\vigil.img,format=raw,if=ide,index=0 -drive file=dist\storage.img,format=raw,if=ide,index=1

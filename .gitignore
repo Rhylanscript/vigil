@@ -13,8 +13,10 @@ Thumbs.db
 
 # builds
 build/
+dist/
 *.img
 !build/.gitkeep
+!dist/.gitkeep
 
 # stuff
 .private/
