@@ -2,10 +2,12 @@
 
 echo Beginning Build process...
 echo ====================================
+echo.
 
 if not exist "build" (
     echo build folder not found, creating at root directory...
     mkdir "build"
+    echo.
 )
 
 set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers -Iboot/shell -Iboot/lib -Iboot/vigil
@@ -74,15 +76,20 @@ echo Compiling vigil/memory.c...
 i686-elf-gcc %CFLAGS% -c boot/vigil/memory.c -o build/vigil_memory.o
 if errorlevel 1 goto :error
 
+echo.
 echo Beginning img build...
+echo.
 
 echo Linking kernel objects...
 i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o build/ata.o build/vigil_memory.o
 if errorlevel 1 goto :error
 
+echo.
+
 echo Converting to flat binary...
 i686-elf-objcopy -O binary build/kernel_full.elf build/kernel_full.bin
 if errorlevel 1 goto :error
+echo.
 
 if exist build\padding.bin del build\padding.bin
 fsutil file createnew build\padding.bin 32768 >nul
@@ -90,11 +97,13 @@ fsutil file createnew build\padding.bin 32768 >nul
 if not exist "dist" (
     echo dist folder not found, creating at root directory...
     mkdir "dist"
+    echo.
 )
 
 if not exist "dist\storage.img" (
     echo Creating persistent storage disk ^(dist\storage.img^)...
     fsutil file createnew dist\storage.img 10485760 >nul
+    echo.
 )
 
 echo Building disk image...
