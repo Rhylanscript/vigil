@@ -23,7 +23,7 @@ if /i "%SUBCOMMAND%"=="run" (
 
 if /i "%SUBCOMMAND%"=="clean" (
     if not exist scripts/clean.bat goto :missing
-    call scripts/clean.bat
+    call scripts/clean.bat %~2 %~3
     exit /b !errorlevel!
 )
 
@@ -46,8 +46,10 @@ echo.
 echo Usage: vigil [command]
 echo.
 echo Commands:
-echo    build   Compiles source code into build/ and dist/
-echo    run     Launches QEMU using the existing disk image
-echo    all     Builds the OS and immediately launches QEMU
-echo    clean   Wipes the build/ and dist/ directories
+echo    build                   Compiles source code into build/ and dist/
+echo    run                     Launches QEMU using the existing disk image
+echo    dev                     Builds the OS and immediately launches QEMU
+echo    clean                   Wipes the build/ and dist/ directories except for memory files
+echo    clean --full            Wipes all build files, no exceptions
+echo    clean --full --force    Same as --full, Skips confirmation
 exit /b 1

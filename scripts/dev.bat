@@ -8,6 +8,8 @@ if exist "scripts/build.bat" (
     exit /b 1
 )
 
+echo.
+
 :: run process
 if exist "scripts/run.bat" (
     call scripts/run.bat

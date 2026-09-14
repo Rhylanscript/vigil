@@ -7,10 +7,16 @@
 #include "keyboard.h"
 #include "io.h"
 #include "shell.h"
+#include "memory.h"
 
 void kernel_main(void) {
     terminal_initialize();
     terminal_print("VIGIL kernel online\n");
+
+    vigil_state_t state;
+    vigil_memory_load(&state);
+    state.boot_count++;
+    vigil_memory_save(&state);
 
     idt_install();
     terminal_print("IDT installed\n");

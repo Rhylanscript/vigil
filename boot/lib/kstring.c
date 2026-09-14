@@ -21,3 +21,25 @@ int kstrncmp(const char* a, const char* b, int n) {
     }
     return 0;
 }
+
+void kuitoa(uint32_t value, char* buffer) {
+    if (value == 0) {
+        buffer[0] = '0';
+        buffer[1] = '\0';
+        return;
+    }
+
+    char digits[10];
+    int count = 0;
+
+    while (value > 0) {
+        digits[count] = '0' + (value % 10);
+        count++;
+        value /= 10;
+    }
+
+    for (int i = 0; i < count; i++) {
+        buffer[i] = digits[count - 1 - i];
+    }
+    buffer[count] = '\0';
+}
