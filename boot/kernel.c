@@ -9,6 +9,7 @@
 #include "shell.h"
 #include "memory.h"
 #include "fs.h"
+#include "timer.h"
 
 void kernel_main(void) {
     terminal_initialize();
@@ -25,6 +26,7 @@ void kernel_main(void) {
     pic_remap();
     irq_install();
     keyboard_install();
+    timer_install(100);
     enable_interrupts();
 
     shell_init();
