@@ -10,7 +10,7 @@ if not exist "build" (
     echo.
 )
 
-set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers -Iboot/shell -Iboot/lib -Iboot/vigil -Iboot/fs
+set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers -Iboot/shell -Iboot/lib -Iboot/vigil -Iboot/fs -Iboot/mem
 
 echo Assembling boot.asm...
 nasm -f bin boot/boot.asm -o build/boot.bin
@@ -72,7 +72,7 @@ echo Compiling ata.c...
 i686-elf-gcc %CFLAGS% -c boot/drivers/ata.c -o build/ata.o
 if errorlevel 1 goto :error
 
-echo Compiling vigil/memory.c...
+echo Compiling memory.c...
 i686-elf-gcc %CFLAGS% -c boot/vigil/memory.c -o build/vigil_memory.o
 if errorlevel 1 goto :error
 
@@ -84,12 +84,16 @@ echo Compiling timer.c...
 i686-elf-gcc %CFLAGS% -c boot/drivers/timer.c -o build/timer.o
 if errorlevel 1 goto :error
 
+echo Compiling heap.c...
+i686-elf-gcc %CFLAGS% -c boot/mem/heap.c -o build/heap.o
+if errorlevel 1 goto :error
+
 echo.
 echo Beginning img build...
 echo.
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o
 if errorlevel 1 goto :error
 
 echo.
