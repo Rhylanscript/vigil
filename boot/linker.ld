@@ -20,6 +20,7 @@ SECTIONS
         build/ata.o(.text)
         build/vigil_memory.o(.text)
         build/fs.o(.text)
+        build/timer.o(.text)
     }
 
     .rodata : {
@@ -38,6 +39,7 @@ SECTIONS
         build/ata.o(.rodata)
         build/vigil_memory.o(.rodata)
         build/fs.o(.rodata)
+        build/timer.o(.rodata)
     }
 
     .data : {
@@ -56,6 +58,7 @@ SECTIONS
         build/ata.o(.data)
         build/vigil_memory.o(.data)
         build/fs.o(.data)
+        build/timer.o(.data)
     }
 
     .bss : {
@@ -74,5 +77,6 @@ SECTIONS
         build/ata.o(.bss)
         build/vigil_memory.o(.bss)
         build/fs.o(.bss)
+        build/timer.o(.bss)
     }
 }

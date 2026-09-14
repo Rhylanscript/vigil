@@ -80,12 +80,16 @@ echo Compiling fs.c...
 i686-elf-gcc %CFLAGS% -c boot/fs/fs.c -o build/fs.o
 if errorlevel 1 goto :error
 
+echo Compiling timer.c...
+i686-elf-gcc %CFLAGS% -c boot/drivers/timer.c -o build/timer.o
+if errorlevel 1 goto :error
+
 echo.
 echo Beginning img build...
 echo.
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o
 if errorlevel 1 goto :error
 
 echo.

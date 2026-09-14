@@ -21,6 +21,6 @@ void pic_remap(void) {
     outb(PIC1_DATA, 0x01);
     outb(PIC2_DATA, 0x01);
 
-    outb(PIC1_DATA, 0xfd);
+    outb(PIC1_DATA, 0xfc);
     outb(PIC2_DATA, 0xff);
 }
