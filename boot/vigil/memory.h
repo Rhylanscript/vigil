@@ -12,4 +12,6 @@ typedef struct {
 void vigil_memory_load(vigil_state_t* state);
 void vigil_memory_save(const vigil_state_t* state);
 
+uint32_t vigil_memory_get_boot_count(void);
+
 #endif

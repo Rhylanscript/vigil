@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "terminal.h"
 #include "kstring.h"
+#include "memory.h"
 
 #define INPUT_BUFFER_SIZE 128
 
@@ -35,7 +36,7 @@ static void execute_command(char* line) {
     }
 
     if (kstrcmp(command, "help") == 0) {
-        terminal_print("Commands: help, erase, recall <text>, status\n");
+        terminal_print("Commands: help, erase, recall <text>, status, cycles\n");
         return;
     }
 
@@ -51,6 +52,15 @@ static void execute_command(char* line) {
 
     if (kstrcmp(command, "recall") == 0) {
         terminal_print(args);
+        terminal_print("\n");
+        return;
+    }
+
+    if (kstrcmp(command, "cycles") == 0) {
+        char count_str[11];
+        kuitoa(vigil_memory_get_boot_count(), count_str);
+        terminal_print("Boot cycles recorded: ");
+        terminal_print(count_str);
         terminal_print("\n");
         return;
     }
