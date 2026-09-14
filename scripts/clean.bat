@@ -14,10 +14,13 @@ if exist build (
 
 :: clean dist/
 if exist dist (
-    echo Emptying dist folder...
-    del /f /q /s dist\* >nul 2>&1
+    echo Emptying dist folder ^(preserving storage.img^)...
+    for %%f in (dist\*) do (
+        if /i not "%%~nxf"=="storage.img" del /f /q "%%f" >nul 2>&1
+    )
+    :: we dont want to clean storage.img
     for /d %%p in (dist\*) do rmdir /s /q "%%p" >nul 2>&1
-    type nul > dist\.gitkeep
+    if not exist dist\.gitkeep type nul > dist\.gitkeep
 ) else (
     echo dist directory not found^^!
     exit /b 1

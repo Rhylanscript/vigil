@@ -17,6 +17,8 @@ SECTIONS
         build/keyboard.o(.text)
         build/shell.o(.text)
         build/kstring.o(.text)
+        build/ata.o(.text)
+        build/vigil_memory.o(.text)
     }
 
     .rodata : {
@@ -32,6 +34,8 @@ SECTIONS
         build/keyboard.o(.rodata)
         build/shell.o(.rodata)
         build/kstring.o(.rodata)
+        build/ata.o(.rodata)
+        build/vigil_memory.o(.rodata)
     }
 
     .data : {
@@ -47,6 +51,8 @@ SECTIONS
         build/keyboard.o(.data)
         build/shell.o(.data)
         build/kstring.o(.data)
+        build/ata.o(.data)
+        build/vigil_memory.o(.data)
     }
 
     .bss : {
@@ -62,5 +68,7 @@ SECTIONS
         build/keyboard.o(.bss)
         build/shell.o(.bss)
         build/kstring.o(.bss)
+        build/ata.o(.bss)
+        build/vigil_memory.o(.bss)
     }
 }

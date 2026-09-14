@@ -8,7 +8,7 @@ if not exist "build" (
     mkdir "build"
 )
 
-set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers -Iboot/shell -Iboot/lib
+set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers -Iboot/shell -Iboot/lib -Iboot/vigil
 
 echo Assembling boot.asm...
 nasm -f bin boot/boot.asm -o build/boot.bin
@@ -66,10 +66,18 @@ echo Compiling shell.c...
 i686-elf-gcc %CFLAGS% -c boot/shell/shell.c -o build/shell.o
 if errorlevel 1 goto :error
 
+echo Compiling ata.c...
+i686-elf-gcc %CFLAGS% -c boot/drivers/ata.c -o build/ata.o
+if errorlevel 1 goto :error
+
+echo Compiling vigil/memory.c...
+i686-elf-gcc %CFLAGS% -c boot/vigil/memory.c -o build/vigil_memory.o
+if errorlevel 1 goto :error
+
 echo Beginning img build...
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o build/ata.o build/vigil_memory.o
 if errorlevel 1 goto :error
 
 echo Converting to flat binary...
@@ -82,6 +90,11 @@ fsutil file createnew build\padding.bin 32768 >nul
 if not exist "dist" (
     echo dist folder not found, creating at root directory...
     mkdir "dist"
+)
+
+if not exist "dist\storage.img" (
+    echo Creating persistent storage disk ^(dist\storage.img^)...
+    fsutil file createnew dist\storage.img 10485760 >nul
 )
 
 echo Building disk image...
