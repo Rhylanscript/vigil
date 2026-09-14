@@ -5,6 +5,7 @@
 #include "terminal.h"
 #include "kstring.h"
 #include "memory.h"
+#include "fs.h"
 
 #define INPUT_BUFFER_SIZE 128
 
@@ -36,7 +37,32 @@ static void execute_command(char* line) {
     }
 
     if (kstrcmp(command, "help") == 0) {
-        terminal_print("Commands: help, erase, recall <text>, status, cycles\n");
+        terminal_print("Available Commands:\n\n");
+
+        terminal_print("help :\n");
+        terminal_print("    See available commands\n\n");
+
+        terminal_print("erase :\n");
+        terminal_print("    Clear shell screen\n\n");
+
+        terminal_print("recall <text> :\n");
+        terminal_print("    Prints <text> to shell\n\n");
+
+        terminal_print("status :\n");
+        terminal_print("    Show a brief description of project\n\n");
+
+        terminal_print("cycles :\n");
+        terminal_print("    Show the total boot counts in memory\n\n");
+
+        terminal_print("write <name> <text> : \n");
+        terminal_print("    Write <text> text to a specified file under <name>\n\n");
+
+        terminal_print("read <name> :\n");
+        terminal_print("    Show contents of file <name>\n\n");
+
+        terminal_print("files :\n");
+        terminal_print("    Show files in memory\n\n");
+
         return;
     }
 
@@ -62,6 +88,73 @@ static void execute_command(char* line) {
         terminal_print("Boot cycles recorded: ");
         terminal_print(count_str);
         terminal_print("\n");
+        return;
+    }
+
+    if (kstrncmp(command, "write ", 6) == 0) {
+        char* rest = command + 6;
+        int i = 0;
+        while (rest[i] != '\0' && rest[i] != ' ') {
+            i++;
+        }
+
+        if (rest[i] != ' ') {
+            terminal_print("Usage: write <name> <text>\n");
+            return;
+        }
+        rest[i] = '\0';
+        char* filename = rest;
+        char* filedata = &rest[i + 1];
+
+        int len = 0;
+        while (filedata[len] != '\0') {
+            len++;
+        }
+
+        int result = fs_write_file(filename, (const uint8_t*) filedata, (uint32_t) len);
+        if (result == 0) {
+            terminal_print("Saved\n");
+        } else {
+            terminal_print("Write failed - file table full.\n");
+        }
+        return;
+    }
+
+    if (kstrncmp(command, "read ", 5) == 0) {
+        char* filename = command + 5;
+        static char buffer[512];
+        uint32_t out_size = 0;
+        int result = fs_read_file(filename, (uint8_t*) buffer, sizeof(buffer) - 1, &out_size);
+        if (result == -1) {
+            terminal_print("File not found\n");
+        } else if (result == -2) {
+            terminal_print("File too large to read\n");
+        } else {
+            buffer[out_size] = '\0';
+            terminal_print(buffer);
+            terminal_print("\n");
+        }
+        return;
+    }
+
+    if (kstrcmp(command, "files") == 0) {
+        char names[FS_MAX_FILES][FS_MAX_NAME_LEN];
+        uint32_t sizes[FS_MAX_FILES];
+        int count = fs_list_files(names, sizes);
+
+        if (count == 0) {
+            terminal_print("No files\n");
+            return;
+        }
+
+        for (int i = 0; i < count; i++) {
+            terminal_print(names[i]);
+            terminal_print(" (");
+            char size_str[11];
+            kuitoa(sizes[i], size_str);
+            terminal_print(size_str);
+            terminal_print(" bytes)\n");
+        }
         return;
     }
 

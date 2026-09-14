@@ -19,6 +19,7 @@ SECTIONS
         build/kstring.o(.text)
         build/ata.o(.text)
         build/vigil_memory.o(.text)
+        build/fs.o(.text)
     }
 
     .rodata : {
@@ -36,6 +37,7 @@ SECTIONS
         build/kstring.o(.rodata)
         build/ata.o(.rodata)
         build/vigil_memory.o(.rodata)
+        build/fs.o(.rodata)
     }
 
     .data : {
@@ -53,6 +55,7 @@ SECTIONS
         build/kstring.o(.data)
         build/ata.o(.data)
         build/vigil_memory.o(.data)
+        build/fs.o(.data)
     }
 
     .bss : {
@@ -70,5 +73,6 @@ SECTIONS
         build/kstring.o(.bss)
         build/ata.o(.bss)
         build/vigil_memory.o(.bss)
+        build/fs.o(.bss)
     }
 }

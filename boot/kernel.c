@@ -8,6 +8,7 @@
 #include "io.h"
 #include "shell.h"
 #include "memory.h"
+#include "fs.h"
 
 void kernel_main(void) {
     terminal_initialize();
