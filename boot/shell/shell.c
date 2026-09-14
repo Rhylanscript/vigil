@@ -47,6 +47,7 @@ static void execute_command(char* line) {
         terminal_print("    write <name> <text>:    Write <text> text to a specified file\n");
         terminal_print("        under <name>\n");
         terminal_print("    read <name>:            Show contents of file <name>\n");
+        terminal_print("    forget <name>:          Removes file <name>\n");
         terminal_print("    files:                  Show files in memory\n\n");
 
         return;
@@ -118,6 +119,21 @@ static void execute_command(char* line) {
             buffer[out_size] = '\0';
             terminal_print(buffer);
             terminal_print("\n");
+        }
+        return;
+    }
+
+    if (kstrcmp(command, "forget") == 0) {
+        if (kstrcmp(args, "") == 0) {
+            terminal_print("Usage: forget <name>\n");
+            return;
+        }
+
+        int result = fs_delete_file(args);
+        if (result == 0) {
+            terminal_print("Forgotten\n");
+        } else {
+            terminal_print("File not found\n");
         }
         return;
     }
