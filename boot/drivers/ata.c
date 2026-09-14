@@ -32,7 +32,7 @@ static void ata_wait_drq(void) {
 }
 
 static void ata_select_sector(uint32_t lba) {
-    outb(ATA_DRIVE_HEAD, 0xe0 | ((lba >> 24) & 0x0f));
+    outb(ATA_DRIVE_HEAD, 0xf0 | ((lba >> 24) & 0x0f));
 
     outb(ATA_SECCOUNT, 1);
     outb(ATA_LBA_LOW, (uint8_t) (lba & 0xff));
@@ -48,7 +48,7 @@ void ata_read_sector(uint32_t lba, uint8_t* buffer) {
     ata_wait_ready();
     ata_wait_drq();
 
-    uint16_t* buf16 = (int16_t*) buffer;
+    uint16_t* buf16 = (uint16_t*) buffer;
     for (int i = 0; i < 256; i++) {
         buf16[i] = inw(ATA_DATA);
     }

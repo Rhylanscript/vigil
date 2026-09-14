@@ -37,31 +37,17 @@ static void execute_command(char* line) {
     }
 
     if (kstrcmp(command, "help") == 0) {
-        terminal_print("Available Commands:\n\n");
 
-        terminal_print("help :\n");
-        terminal_print("    See available commands\n\n");
-
-        terminal_print("erase :\n");
-        terminal_print("    Clear shell screen\n\n");
-
-        terminal_print("recall <text> :\n");
-        terminal_print("    Prints <text> to shell\n\n");
-
-        terminal_print("status :\n");
-        terminal_print("    Show a brief description of project\n\n");
-
-        terminal_print("cycles :\n");
-        terminal_print("    Show the total boot counts in memory\n\n");
-
-        terminal_print("write <name> <text> : \n");
-        terminal_print("    Write <text> text to a specified file under <name>\n\n");
-
-        terminal_print("read <name> :\n");
-        terminal_print("    Show contents of file <name>\n\n");
-
-        terminal_print("files :\n");
-        terminal_print("    Show files in memory\n\n");
+        terminal_print("Available Commands:\n");
+        terminal_print("    help:                   See available commands\n");
+        terminal_print("    erase:                  Clear shell screen\n");
+        terminal_print("    recall <text>:          Prints <text> to shell\n");
+        terminal_print("    status:                 Show a brief description of project\n");
+        terminal_print("    cycles:                 Show the total boot counts in memory\n");
+        terminal_print("    write <name> <text>:    Write <text> text to a specified file\n");
+        terminal_print("        under <name>\n");
+        terminal_print("    read <name>:            Show contents of file <name>\n");
+        terminal_print("    files:                  Show files in memory\n\n");
 
         return;
     }
@@ -91,20 +77,19 @@ static void execute_command(char* line) {
         return;
     }
 
-    if (kstrncmp(command, "write ", 6) == 0) {
-        char* rest = command + 6;
-        int i = 0;
-        while (rest[i] != '\0' && rest[i] != ' ') {
-            i++;
+    if (kstrcmp(command, "write") == 0) {
+        int j = 0;
+        while (args[j] != '\0' && args[j] != ' ') {
+            j++;
         }
 
-        if (rest[i] != ' ') {
+        if (args[j] != ' ') {
             terminal_print("Usage: write <name> <text>\n");
             return;
         }
-        rest[i] = '\0';
-        char* filename = rest;
-        char* filedata = &rest[i + 1];
+        args[j] = '\0';
+        char* filename = args;
+        char* filedata = &args[j + 1];
 
         int len = 0;
         while (filedata[len] != '\0') {
@@ -120,8 +105,8 @@ static void execute_command(char* line) {
         return;
     }
 
-    if (kstrncmp(command, "read ", 5) == 0) {
-        char* filename = command + 5;
+    if (kstrcmp(command, "read") == 0) {
+        char* filename = args;
         static char buffer[512];
         uint32_t out_size = 0;
         int result = fs_read_file(filename, (uint8_t*) buffer, sizeof(buffer) - 1, &out_size);

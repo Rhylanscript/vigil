@@ -24,18 +24,30 @@ print_string:
     ret
 
 load_stage2:
-    mov ah, 0x02
-    mov al, 16
-    mov ch, 0
-    mov cl, 2
-    mov dh, 0
+    mov si, dap
+    mov ah, 0x42
+
     mov dl, [boot_drive]
-    mov bx, 0x7e00
-
     int 0x13
-    jc disk_error
 
+    jc disk_error
     ret
+
+dap:
+    db 0x10
+    ; size of packet in bytes, always 16 (0x10)
+    db 0
+    ; reserved by bios spec (always 0)
+    dw 64
+    ; number of sectors to read. 64 sectors = 32kb
+    dw 0x7e00
+    ; offset of where to load data in memory
+    dw 0x0000
+    ; segment of where to load data in memory. With above, it points
+    ; to address 0x7e00 
+    dq 1
+    ; starting LBA to read from. as LBA numbering starts at 0, Stage
+    ; 2 begins at LBA 1, after boot sector which is 0
 
 disk_error:
     mov si, msg_disk_error
