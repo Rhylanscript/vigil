@@ -3,6 +3,10 @@
 *.o
 *.elf
 
+# logs
+*.log
+*.logs
+
 # os
 Thumbs.db
 .DS_STORE
