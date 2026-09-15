@@ -17,7 +17,7 @@ if /i "%SUBCOMMAND%"=="build" (
 
 if /i "%SUBCOMMAND%"=="run" (
     if not exist scripts/run.bat goto :missing
-    call scripts/run.bat
+    call scripts/run.bat %~2
     exit /b !errorlevel!
 )
 
@@ -48,6 +48,7 @@ echo.
 echo Commands:
 echo    build                   Compiles source code into build/ and dist/
 echo    run                     Launches QEMU using the existing disk image
+echo    run --nat               Launches in native terminal instead
 echo    dev                     Builds the OS and immediately launches QEMU
 echo    clean                   Wipes the build/ and dist/ directories except for memory files
 echo    clean --full            Wipes all build files, no exceptions
