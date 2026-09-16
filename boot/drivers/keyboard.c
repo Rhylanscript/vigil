@@ -47,6 +47,7 @@ static const char scancode_to_ascii_shifted[128] = {
 
 static int shift_held = 0;
 static int caps_active = 0;
+static int extended_prefix = 0;
 static keyboard_handler_t input_handler = 0;
 
 void keyboard_set_handler(keyboard_handler_t handler) {
@@ -57,6 +58,26 @@ static void keyboard_callback(struct registers regs) {
     (void) regs;
 
     unsigned char scancode = inb(0x60);
+
+    if (scancode == 0xe0) {
+        extended_prefix = -1;
+        return;
+    }
+
+    if (extended_prefix) {
+        extended_prefix = 0;
+
+        if (scancode & 0x80) {
+            return;
+        }
+
+        if (scancode == 0x48 && input_handler != 0) {
+            input_handler(KEY_ARROW_UP);
+        } else if (scancode == 0x50 && input_handler != 0) {
+            input_handler(KEY_ARROW_DOWN);
+        }
+        return;
+    }
 
     if (scancode == SC_LSHIFT_PRESS || scancode == SC_RSHIFT_PRESS) {
         shift_held = 1;
