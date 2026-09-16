@@ -29,9 +29,24 @@ void kprintf(const char* format, ...) {
                 terminal_print(buffer);
                 break;
             }
+            case 'u': {
+                unsigned int value = va_arg(args, unsigned int);
+                kuitoa((uint32_t) value, buffer);
+                terminal_print(buffer);
+                break;
+            }
             case 'x': {
                 unsigned int value = va_arg(args, unsigned int);
                 khtoa((uint32_t) value, buffer);
+                terminal_print(buffer);
+                break;
+            }
+            case 'p': {
+                void* ptr_value = va_arg(args, void*);
+                uint32_t address = (uint32_t) ptr_value;
+
+                terminal_print("0x");
+                khtoa(address, buffer);
                 terminal_print(buffer);
                 break;
             }
