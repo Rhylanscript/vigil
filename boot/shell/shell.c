@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "terminal.h"
 #include "kstring.h"
+#include "kprintf.h"
 #include "memory.h"
 #include "fs.h"
 #include "timer.h"
@@ -74,21 +75,13 @@ static void execute_command(char* line) {
     }
 
     if (kstrcmp(command, "cycles") == 0) {
-        char count_str[11];
-        kuitoa(vigil_memory_get_boot_count(), count_str);
-        terminal_print("Boot cycles recorded: ");
-        terminal_print(count_str);
-        terminal_print("\n");
+        kprintf("Boot cycles recorded: %d\n", vigil_memory_get_boot_count());
         return;
     }
 
     if (kstrcmp(command, "uptime") == 0) {
         uint32_t seconds = timer_get_ticks() / timer_get_frequency();
-        char seconds_str[11];
-        kuitoa(seconds, seconds_str);
-        terminal_print("Uptime: ");
-        terminal_print(seconds_str);
-        terminal_print(" seconds\n");
+        kprintf("Uptime: %d seconds\n", seconds);
         return;
     }
 
@@ -97,16 +90,7 @@ static void execute_command(char* line) {
         uint32_t free_bytes = 0;
         heap_get_stats(&total, &free_bytes);
 
-        char total_str[11];
-        char free_str[11];
-        kuitoa(total, total_str);
-        kuitoa(free_bytes, free_str);
-
-        terminal_print("Heap: ");
-        terminal_print(free_str);
-        terminal_print(" / ");
-        terminal_print(total_str);
-        terminal_print(" bytes free\n");
+        kprintf("Heap: %d / %d bytes free\n", free_bytes, total);
         return;
     }
 
@@ -181,12 +165,7 @@ static void execute_command(char* line) {
         }
 
         for (int i = 0; i < count; i++) {
-            terminal_print(names[i]);
-            terminal_print(" (");
-            char size_str[11];
-            kuitoa(sizes[i], size_str);
-            terminal_print(size_str);
-            terminal_print(" bytes)\n");
+            kprintf("%s (%d bytes)\n", names[i], sizes[i]);
         }
         return;
     }
