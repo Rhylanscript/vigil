@@ -64,6 +64,10 @@ echo Compiling kstring.c...
 i686-elf-gcc %CFLAGS% -c boot/lib/kstring.c -o build/kstring.o
 if errorlevel 1 goto :error
 
+echo Compiling kprintf.c...
+i686-elf-gcc %CFLAGS% -c boot/lib/kprintf.c -o build/kprintf.o
+if errorlevel 1 goto :error
+
 echo Compiling shell.c...
 i686-elf-gcc %CFLAGS% -c boot/shell/shell.c -o build/shell.o
 if errorlevel 1 goto :error
@@ -93,7 +97,7 @@ echo Beginning img build...
 echo.
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o
 if errorlevel 1 goto :error
 
 echo.
