@@ -1,6 +1,4 @@
-/* boot/terminal.h
- * public interface for the VGA text mode terminal driver
- */
+// boot/drivers/terminal.h
 
 #ifndef TERMINAL_H
 #define TERMINAL_H
@@ -16,5 +14,7 @@ void terminal_putchar(char c);
 /// Prints a null terminated string one char at a time via
 /// `terminal_putchar`
 void terminal_print(const char* c);
+
+void terminal_update_cursor(void);
 
 #endif

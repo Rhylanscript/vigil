@@ -92,12 +92,20 @@ echo Compiling heap.c...
 i686-elf-gcc %CFLAGS% -c boot/mem/heap.c -o build/heap.o
 if errorlevel 1 goto :error
 
+echo Compiling font.c...
+i686-elf-gcc %CFLAGS% -c boot/drivers/font.c -o build/font.o
+if errorlevel 1 goto :error
+
+echo Compiling graphics.c...
+i686-elf-gcc %CFLAGS% -c boot/drivers/graphics.c -o build/graphics.o
+if errorlevel 1 goto :error
+
 echo.
 echo Beginning img build...
 echo.
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o
 if errorlevel 1 goto :error
 
 echo.
