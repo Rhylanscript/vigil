@@ -64,6 +64,27 @@ void gfx_fill_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_
     }
 }
 
+void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color) {
+    if (pixel_rows >= screen_height) {
+        gfx_clear(fill_color);
+        return;
+    }
+
+    for (uint32_t y = 0; y < screen_height - pixel_rows; y++) {
+        uint8_t* dst = framebuffer + (y * pitch);
+        uint8_t* src = framebuffer + ((y + pixel_rows) * pitch);
+        for (uint32_t b = 0; b < pitch; b++) {
+            dst[b] = src[b];
+        }
+    }
+
+    for (uint32_t y = screen_height - pixel_rows; y < screen_height; y++) {
+        for (uint32_t x = 0; x < screen_width; x++) {
+            gfx_put_pixel(x, y, fill_color);
+        }
+    }
+}
+
 uint32_t gfx_screen_width(void) {
     return screen_width;
 }
