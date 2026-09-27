@@ -79,8 +79,12 @@ void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color) {
     }
 
     for (uint32_t y = screen_height - pixel_rows; y < screen_height; y++) {
+        uint8_t* row = framebuffer + (y * pitch);
         for (uint32_t x = 0; x < screen_width; x++) {
-            gfx_put_pixel(x, y, fill_color);
+            uint8_t* pixel = row + (x * 3);
+            pixel[0] = fill_color.b;
+            pixel[1] = fill_color.g;
+            pixel[2] = fill_color.r;
         }
     }
 }

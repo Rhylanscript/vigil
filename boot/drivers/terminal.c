@@ -65,6 +65,13 @@ void terminal_initialize(void) {
     text_cols = (int) (gfx_screen_width() / FONT_WIDTH);
     text_rows = (int) (gfx_screen_height() / FONT_HEIGHT);
 
+    if (text_cols < 1) {
+        text_cols = 1;
+    }
+    if (text_rows < 1) {
+        text_rows = 1;
+    }
+
     gfx_clear(TERM_BG);
 
     cursor_row = 0;
