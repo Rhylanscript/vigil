@@ -18,6 +18,8 @@ void gfx_init(void);
 
 void gfx_put_pixel(uint32_t x, uint32_t y, gfx_color_t color);
 
+gfx_color_t gfx_get_pixel(uint32_t x, uint32_t y);
+
 void gfx_clear(gfx_color_t color);
 
 void gfx_draw_char(uint32_t x, uint32_t y, char c, gfx_color_t color);
