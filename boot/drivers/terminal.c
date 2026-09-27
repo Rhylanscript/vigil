@@ -1,72 +1,56 @@
 // boot/drivers/terminal.c
 
 #include "terminal.h"
-#include "io.h"
+#include "graphics.h"
+#include "font.h"
 
-#define VGA_WIDTH 80
-#define VGA_HEIGHT 25
-#define VGA_MEMORY ((unsigned short*) 0xb8000)
-#define WHITE_ON_BLACK 0x0f
-#define VGA_CTRL_PORT 0x3d4
-#define VGA_DATA_PORT 0x3d5 
+#define TERM_FG GFX_WHITE
+#define TERM_BG GFX_BLACK
 
 static int cursor_row;
 static int cursor_col;
 
-static unsigned short make_cell(char c, unsigned char colour) {
-    return (unsigned short) c | ((unsigned short) colour << 8);
+static int text_cols;
+static int text_rows;
+
+static uint32_t cell_x(int col) {
+    return (uint32_t) col * FONT_WIDTH;
+}
+static uint32_t cell_y(int row) {
+    return (uint32_t) row * FONT_HEIGHT;
 }
 
-static void update_cursor(void) {
-    unsigned short pos = cursor_row * VGA_WIDTH + cursor_col;
-
-    outb(VGA_CTRL_PORT, 0x0f);
-    outb(VGA_DATA_PORT, (unsigned char) (pos & 0xff));
-    outb(VGA_CTRL_PORT, 0x0e);
-    outb(VGA_DATA_PORT, (unsigned char) ((pos >> 8) & 0xff));
-}
-
-void terminal_initialize(void) {
-    volatile unsigned short* video = VGA_MEMORY;
-
-    for (int i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
-        video[i] = make_cell(' ', WHITE_ON_BLACK);
-    }
-
-    cursor_row = 0;
-    cursor_col = 0;
-    update_cursor();
+static void clear_cell(int col, int row) {
+    gfx_fill_rect(cell_x(col), cell_y(row), FONT_WIDTH, FONT_HEIGHT, TERM_BG);
 }
 
 static void scroll_if_needed(void) {
-    if (cursor_row < VGA_HEIGHT) {
+    if (cursor_row < text_rows) {
         return;
     }
 
-    volatile unsigned short* video = VGA_MEMORY;
+    gfx_scroll_up((uint32_t) FONT_HEIGHT, TERM_BG);
 
-    for (int row = 1; row < VGA_HEIGHT; row++) {
-        for (int col = 0; col < VGA_WIDTH; col++) {
-            video[(row - 1) * VGA_WIDTH + col] = video[row * VGA_WIDTH + col];
-        }
-    }
+    cursor_row = text_rows - 1;
+}
 
-    for (int col = 0; col < VGA_WIDTH; col++) {
-        video[(VGA_HEIGHT - 1) * VGA_WIDTH + col] = make_cell(' ', WHITE_ON_BLACK);
-    }
+void terminal_initialize(void) {
+    gfx_init();
 
-    cursor_row = VGA_HEIGHT - 1;
-    update_cursor();
+    text_cols = (int) (gfx_screen_width() / FONT_WIDTH);
+    text_rows = (int) (gfx_screen_height() / FONT_HEIGHT);
+
+    gfx_clear(TERM_BG);
+
+    cursor_row = 0;
+    cursor_col = 0;
 }
 
 void terminal_putchar(char c) {
-    volatile unsigned short* video = VGA_MEMORY;
-
     if (c == '\n') {
         cursor_col = 0;
         cursor_row++;
         scroll_if_needed();
-        update_cursor();
         return;
     }
 
@@ -75,22 +59,21 @@ void terminal_putchar(char c) {
             cursor_col--;
         } else if (cursor_row > 0) {
             cursor_row--;
-            cursor_col = VGA_WIDTH - 1;
+            cursor_col = text_cols - 1;
         }
-        video[cursor_row * VGA_WIDTH + cursor_col] = make_cell(' ', WHITE_ON_BLACK);
-        update_cursor();
+        clear_cell(cursor_col, cursor_row);
         return;
     }
 
-    video[cursor_row * VGA_WIDTH + cursor_col] = make_cell(c, WHITE_ON_BLACK);
+    clear_cell(cursor_col, cursor_row);
+    gfx_draw_char(cell_x(cursor_col), cell_y(cursor_row), c, TERM_FG);
 
     cursor_col++;
-    if (cursor_col >= VGA_WIDTH) {
+    if (cursor_col >= text_cols) {
         cursor_col = 0;
         cursor_row++;
         scroll_if_needed();
     }
-    update_cursor();
 }
 
 void terminal_print(const char* str) {

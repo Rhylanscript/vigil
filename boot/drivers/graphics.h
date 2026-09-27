@@ -27,4 +27,6 @@ void gfx_fill_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_
 uint32_t gfx_screen_width(void);
 uint32_t gfx_screen_height(void);
 
+void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color);
+
 #endif
