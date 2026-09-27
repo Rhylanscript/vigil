@@ -23,6 +23,8 @@ SECTIONS
         build/fs.o(.text)
         build/timer.o(.text)
         build/heap.o(.text)
+        build/font.o(.text)
+        build/graphics.o(.text)
     }
 
     .rodata : {
@@ -44,6 +46,8 @@ SECTIONS
         build/fs.o(.rodata)
         build/timer.o(.rodata)
         build/heap.o(.rodata)
+        build/font.o(.rodata)
+        build/graphics.o(.rodata)
     }
 
     .data : {
@@ -65,6 +69,8 @@ SECTIONS
         build/fs.o(.data)
         build/timer.o(.data)
         build/heap.o(.data)
+        build/font.o(.data)
+        build/graphics.o(.data)
     }
 
     .bss : {
@@ -87,6 +93,8 @@ SECTIONS
         build/fs.o(.bss)
         build/timer.o(.bss)
         build/heap.o(.bss)
+        build/font.o(.bss)
+        build/graphics.o(.bss)
         __bss_end = .;
     }
 }
