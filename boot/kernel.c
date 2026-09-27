@@ -12,24 +12,28 @@
 #include "timer.h"
 #include "heap.h"
 #include "bootinfo.h"
+#include "graphics.h"
+#include "font.h"
 
 void kernel_main(void) {
-    boot_info_t* info = boot_info();
-    uint8_t* framebuffer = (uint8_t*) info->framebuffer_addr;
+    // temporary test
 
-    for (uint32_t y = 0; y < info->height; y++) {
-        uint8_t* row = framebuffer + (y * info->pitch);
-        for (uint32_t x = 0; x < info->width; x++) {
-            uint8_t* pixel = row + (x * 3);
-            pixel[0] = 0x00;
-            pixel[1] = 0xff;
-            pixel[2] = 0x00;
-        }
+    gfx_init();
+    gfx_clear((gfx_color_t){0x10, 0x10, 0x10}); // dark grey, not pure black, so we can tell "cleared" apart from "still uninitialized memory"
+
+    const char* test_message = "VIGIL graphics online";
+    uint32_t x = 16;
+    uint32_t y = 16;
+    for (int i = 0; test_message[i] != '\0'; i++) {
+        gfx_draw_char(x, y, test_message[i], GFX_WHITE);
+        x += FONT_WIDTH; // advance one glyph's width for the next character
     }
 
     for (;;) {
         __asm__ volatile ("hlt");
     }
+
+    // end temp test
 
     terminal_initialize();
     terminal_print("VIGIL kernel online\n");
