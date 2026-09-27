@@ -66,13 +66,36 @@ stage2_start:
     ; pull xresolution (offset 0x12), yresolution (offset 0x14), and
     ; bitsperpixel (offset 0x19) out of returned structure
 
-    ; mov si, msg_press_key
-    ; call print_string
-    ; xor ax, ax
-    ; int 0x16
-    ; pauses boot process until user presses a key
+    mov ax, 0x4f02
+    mov bx, VBE_TEST_MODE | 0x4000
+    int 0x10
+
+    cmp ax, 0x004f
+    jne .vbe_set_fail
+
+    mov eax, [es:di + 0x28]
+    mov [BOOT_INFO_ADDR + 0], eax
+
+    mov ax, [es:di + 0x10]
+    mov [BOOT_INFO_ADDR + 4], ax
+
+    mov ax, [es:di + 0x12]      ; XResolution
+    mov [BOOT_INFO_ADDR + 6], ax
+
+    mov ax, [es:di + 0x14]      ; YResolution
+    mov [BOOT_INFO_ADDR + 8], ax
+
+    mov al, [es:di + 0x19]      ; BitsPerPixel
+    mov [BOOT_INFO_ADDR + 10], al
 
     jmp .vbe_done
+
+.vbe_set_fail:
+    ; mode set failed, still in text mode here, so this message 
+    ; WILL actually be visible
+    mov si, msg_vbe_set_fail
+    call print_string
+    jmp $
 
 .vbe_unsupported:
     mov si, msg_vbe_fail
@@ -183,6 +206,7 @@ msg_a20_fail db 'VIGIL: A20 FAILED', 13, 10, 0
 
 msg_vbe_found db 'VIGIL: VBE mode found - ', 0
 msg_vbe_fail db 'VIGIL: VBE mode unavailable', 13, 10, 0
+msg_vbe_set_fail db 'VIGIL: VBE mode activation FAILED', 13, 10, 0
 
 msg_x db 'x', 0
 msg_at db ' @ ', 0              ; why does it say this is a comment bro the @ is literally in comments
@@ -190,3 +214,4 @@ msg_bpp db 'bpp', 13, 10, 0
 msg_press_key db 'VIGIL: press any key to continue...', 13, 10, 0
 
 VBE_TEST_MODE equ 0x118
+BOOT_INFO_ADDR equ 0x0600
