@@ -12,6 +12,7 @@
 
 #define PS2_STATUS_OUTPUT_FULL 0x01
 #define PS2_STATUS_INPUT_FULL  0x02
+#define PS2_STATUS_AUX_DATA    0x20
 
 #define PS2_CMD_ENABLE_AUX     0xA8
 #define PS2_CMD_READ_CONFIG    0x20
@@ -51,6 +52,12 @@ static void ps2_write_data(uint8_t data) {
 static uint8_t ps2_read_data(void) {
     ps2_wait_read_ready();
     return inb(PS2_DATA_PORT);
+}
+
+static void ps2_flush_output(void) {
+    while (inb(PS2_STATUS_PORT) & PS2_STATUS_OUTPUT_FULL) {
+        inb(PS2_DATA_PORT);
+    }
 }
 
 static void mouse_send_command(uint8_t command) {
@@ -101,7 +108,18 @@ static void process_packet(void) {
 static void mouse_callback(struct registers regs) {
     (void) regs;
 
-    packet[packet_index] = inb(PS2_DATA_PORT);
+    uint8_t status = inb(PS2_STATUS_PORT);
+    if (!(status & PS2_STATUS_OUTPUT_FULL) || !(status & PS2_STATUS_AUX_DATA)) {
+        return;
+    }
+
+    uint8_t data = inb(PS2_DATA_PORT);
+
+    if (packet_index == 0 && !(data & 0x08)) {
+        return;
+    }
+
+    packet[packet_index] = data;
     packet_index++;
 
     if (packet_index >= 3) {
@@ -111,8 +129,8 @@ static void mouse_callback(struct registers regs) {
 }
 
 void mouse_install(void) {
+    ps2_flush_output();
     ps2_write_command(PS2_CMD_ENABLE_AUX);
-
     ps2_write_command(PS2_CMD_READ_CONFIG);
     uint8_t config = ps2_read_data();
     config |= 0x02;
@@ -122,6 +140,9 @@ void mouse_install(void) {
 
     mouse_send_command(MOUSE_CMD_SET_DEFAULTS);
     mouse_send_command(MOUSE_CMD_ENABLE_REPORTING);
+
+    ps2_flush_output();
+    packet_index = 0;
 
     cursor_x = (int32_t) gfx_screen_width() / 2;
     cursor_y = (int32_t) gfx_screen_height() / 2;
