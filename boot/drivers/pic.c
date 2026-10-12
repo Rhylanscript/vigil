@@ -1,4 +1,4 @@
-// boot/pic.c
+// boot/drivers/pic.c
 
 #include "pic.h"
 #include "io.h"
@@ -23,4 +23,22 @@ void pic_remap(void) {
 
     outb(PIC1_DATA, 0xfc);
     outb(PIC2_DATA, 0xff);
+}
+
+void pic_unmask_irq(uint8_t irq) {
+    uint16_t port;
+    uint8_t bit;
+
+    if (irq < 8) {
+        port = PIC1_DATA;
+        bit = irq;
+    } else {
+        port = PIC2_DATA;
+        bit = irq - 8;
+    }
+
+    uint8_t current_mask = inb(port);
+
+    uint8_t new_mask = current_mask & ~(1 << bit);
+    outb(port, new_mask);
 }

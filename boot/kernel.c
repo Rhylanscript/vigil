@@ -11,6 +11,7 @@
 #include "fs.h"
 #include "timer.h"
 #include "heap.h"
+#include "mouse.h"
 
 void kernel_main(void) {
     terminal_initialize();
@@ -28,8 +29,10 @@ void kernel_main(void) {
 
     pic_remap();
     irq_install();
+
     keyboard_install();
     timer_install(100);
+    mouse_install();
     enable_interrupts();
 
     shell_init();
@@ -37,5 +40,6 @@ void kernel_main(void) {
     for (;;) {
         __asm__ volatile ("hlt");
         terminal_update_cursor();
+        mouse_update_cursor();
     }
 }

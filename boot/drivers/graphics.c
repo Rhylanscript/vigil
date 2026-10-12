@@ -30,6 +30,21 @@ void gfx_put_pixel(uint32_t x, uint32_t y, gfx_color_t color) {
     pixel[2] = color.r;
 }
 
+gfx_color_t gfx_get_pixel(uint32_t x, uint32_t y) {
+    if (x >= screen_width || y >= screen_height) {
+        return GFX_BLACK;
+    }
+
+    uint8_t* row = framebuffer + (y * pitch);
+    uint8_t* pixel = row + (x * 3);
+
+    gfx_color_t color;
+    color.b = pixel[0];
+    color.g = pixel[1];
+    color.r = pixel[2];
+    return color;
+}
+
 void gfx_clear(gfx_color_t color) {
     for (uint32_t y = 0; y < screen_height; y++) {
         for (uint32_t x = 0; x < screen_width; x++) {

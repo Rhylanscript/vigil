@@ -25,6 +25,7 @@ SECTIONS
         build/heap.o(.text)
         build/font.o(.text)
         build/graphics.o(.text)
+        build/mouse.o(.text)
     }
 
     .rodata : {
@@ -48,6 +49,7 @@ SECTIONS
         build/heap.o(.rodata)
         build/font.o(.rodata)
         build/graphics.o(.rodata)
+        build/mouse.o(.rodata)
     }
 
     .data : {
@@ -71,6 +73,7 @@ SECTIONS
         build/heap.o(.data)
         build/font.o(.data)
         build/graphics.o(.data)
+        build/mouse.o(.data)
     }
 
     .bss : {
@@ -95,6 +98,7 @@ SECTIONS
         build/heap.o(.bss)
         build/font.o(.bss)
         build/graphics.o(.bss)
+        build/mouse.o(.bss)
         __bss_end = .;
     }
 }
