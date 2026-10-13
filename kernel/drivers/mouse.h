@@ -17,4 +17,6 @@ int mouse_left_button(void);
 int mouse_right_button(void);
 int mouse_middle_button(void);
 
+int mouse_left_clicked(void);
+
 #endif
