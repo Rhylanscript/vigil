@@ -24,6 +24,7 @@ static int cursor_blink_on;
 static uint32_t last_blink_tick;
 
 static uint32_t top_margin = 0;
+static uint32_t bottom_margin = 0;
 
 static char text_buffer[TERM_MAX_ROWS][TERM_MAX_COLS];
 
@@ -32,6 +33,10 @@ static uint32_t cell_x(int col) {
 }
 static uint32_t cell_y(int row) {
     return top_margin + (uint32_t) row * FONT_HEIGHT;
+}
+
+static uint32_t text_area_height(void) {
+    return gfx_screen_height() - top_margin - bottom_margin;
 }
 
 static void set_buffer_cell(int col, int row, char c) {
@@ -89,13 +94,17 @@ static void scroll_if_needed(void) {
         return;
     }
 
-    gfx_scroll_region_up(top_margin, (uint32_t) FONT_HEIGHT, TERM_BG);
+    gfx_scroll_region_up(top_margin, text_area_height(), (uint32_t) FONT_HEIGHT, TERM_BG);
     scroll_buffer_up();
     cursor_row = text_rows - 1;
 }
 
 void terminal_set_top_margin(uint32_t pixels) {
     top_margin = pixels;
+}
+
+void terminal_set_bottom_margin(uint32_t pixels) {
+    bottom_margin = pixels;
 }
 
 void terminal_initialize(void) {
@@ -105,9 +114,12 @@ void terminal_initialize(void) {
     if (top_margin > screen_h) {
         top_margin = screen_h;
     }
+    if (bottom_margin > screen_h - top_margin) {
+        bottom_margin = screen_h - top_margin;
+    }
 
     text_cols = (int) (gfx_screen_width() / FONT_WIDTH);
-    text_rows = (int) ((screen_h - top_margin) / FONT_HEIGHT);
+    text_rows = (int) ((screen_h - top_margin - bottom_margin) / FONT_HEIGHT);
 
     if (text_cols < 1) {
         text_cols = 1;
@@ -125,7 +137,7 @@ void terminal_initialize(void) {
 
     clear_buffer();
 
-    gfx_fill_rect(0, top_margin, gfx_screen_width(), gfx_screen_height() - top_margin, TERM_BG);
+    gfx_fill_rect(0, top_margin, gfx_screen_width(), text_area_height(), TERM_BG);
 
     cursor_row = 0;
     cursor_col = 0;
@@ -201,7 +213,7 @@ void terminal_update_cursor(void) {
 }
 
 void terminal_redraw(void) {
-    gfx_fill_rect(0, top_margin, gfx_screen_width(), gfx_screen_height() - top_margin, TERM_BG);
+    gfx_fill_rect(0, top_margin, gfx_screen_width(), text_area_height(), TERM_BG);
 
     for (int row = 0; row < text_rows; row++) {
         for (int col = 0; col < text_cols; col++) {
