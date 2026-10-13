@@ -7,6 +7,8 @@
 int kstrcmp(const char* a, const char* b);
 int kstrncmp(const char* a, const char* b, int n);
 
+uint32_t kstrlen(const char* str);
+
 // converts unsigned int into decimal string
 void kuitoa(uint32_t value, char* buffer);
 

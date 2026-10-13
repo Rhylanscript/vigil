@@ -22,6 +22,14 @@ int kstrncmp(const char* a, const char* b, int n) {
     return 0;
 }
 
+uint32_t kstrlen(const char* str) {
+    uint32_t length = 0;
+    while (str[length] != '\0') {
+        length++;
+    }
+    return length;
+}
+
 void kuitoa(uint32_t value, char* buffer) {
     if (value == 0) {
         buffer[0] = '0';
