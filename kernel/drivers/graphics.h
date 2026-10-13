@@ -12,7 +12,9 @@ typedef struct {
 
 #define GFX_BLACK ((gfx_color_t){0x00, 0x00, 0x00})
 #define GFX_WHITE ((gfx_color_t){0xff, 0xff, 0xff})
+
 #define GFX_GREEN ((gfx_color_t){0x00, 0xff, 0x00})
+#define GFX_RED   ((gfx_color_t){0xff, 0x00, 0x00})
 
 void gfx_init(void);
 
@@ -24,7 +26,11 @@ void gfx_clear(gfx_color_t color);
 
 void gfx_draw_char(uint32_t x, uint32_t y, char c, gfx_color_t color);
 
+void gfx_draw_string(uint32_t x, uint32_t y, const char* str, gfx_color_t color);
+
 void gfx_fill_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color);
+
+void gfx_draw_rect_outline(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color);
 
 uint32_t gfx_screen_width(void);
 uint32_t gfx_screen_height(void);
