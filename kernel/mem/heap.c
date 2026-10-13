@@ -4,17 +4,20 @@
 
 #define HEAP_SIZE (1024 * 1024) // 1mb
 
+// heap lives at addr in plain ram above 1mb (0x200000 = 2mb)
+// kernel ends around 0x10000 & stack is at 0x90000, so this area is free
+#define HEAP_START_ADDRESS 0x200000
+
 typedef struct block_header {
     uint32_t size;
     int free;
     struct block_header* next;
 } block_header_t;
 
-static uint8_t heap_pool[HEAP_SIZE];
 static block_header_t* heap_start;
 
 void heap_init(void) {
-    heap_start = (block_header_t*) heap_pool;
+    heap_start = (block_header_t*) HEAP_START_ADDRESS;
     heap_start->size = HEAP_SIZE - sizeof(block_header_t);
     heap_start->free = 1;
     heap_start->next = 0;
