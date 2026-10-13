@@ -10,11 +10,12 @@
 #include "mouse.h"
 #include "terminal.h"
 #include "shell.h"
+#include "title_bar.h"
 
 // --- home screen layout (px) ---
 
 #define HOME_TITLE              "VIGIL"
-#define HOME_HINT               "Press ESC inside an app to return here"
+#define HOME_HINT               "Click X or Press ESC inside an app to return here"
 #define HOME_TITLE_Y            120
 #define HOME_FIRST_BUTTON_Y     200
 #define HOME_BUTTON_WIDTH       240
@@ -26,8 +27,9 @@
 // --- apps ---
 
 static void start_terminal(void) {
+    terminal_set_top_margin(TITLE_BAR_HEIGHT);
     terminal_initialize();
-    terminal_print("Terminal - press ESC to return to home screen\n");
+    terminal_print("Terminal - click X or press ESC to return home\n");
     shell_init();
 }
 
@@ -78,6 +80,7 @@ static void show_home_screen(void) {
 static void launch_app(int index) {
     mouse_hide_cursor();
     apps[index].start();
+    title_bar_draw(apps[index].name);
     running_app = &apps[index];
 }
 
@@ -129,6 +132,13 @@ void launcher_update(void) {
     const app_t* app = running_app;
 
     if (app != 0) {
+        if (mouse_left_clicked()) {
+            if (title_bar_hit_test(mouse_get_x(), mouse_get_y()) == TITLE_BAR_HIT_CLOSE) {
+                show_home_screen();
+                return;
+            }
+        }
+
         if (app->on_tick != 0) {
             app->on_tick();
         }

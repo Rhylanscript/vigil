@@ -20,11 +20,13 @@ static int text_rows;
 static int cursor_blink_on;
 static uint32_t last_blink_tick;
 
+static uint32_t top_margin = 0;
+
 static uint32_t cell_x(int col) {
     return (uint32_t) col * FONT_WIDTH;
 }
 static uint32_t cell_y(int row) {
-    return (uint32_t) row * FONT_HEIGHT;
+    return top_margin + (uint32_t) row * FONT_HEIGHT;
 }
 
 static void clear_cell(int col, int row) {
@@ -55,15 +57,24 @@ static void scroll_if_needed(void) {
         return;
     }
 
-    gfx_scroll_up((uint32_t) FONT_HEIGHT, TERM_BG);
+    gfx_scroll_region_up(top_margin, (uint32_t) FONT_HEIGHT, TERM_BG);
     cursor_row = text_rows - 1;
+}
+
+void terminal_set_top_margin(uint32_t pixels) {
+    top_margin = pixels;
 }
 
 void terminal_initialize(void) {
     gfx_init();
 
+    uint32_t screen_h = gfx_screen_height();
+    if (top_margin > screen_h) {
+        top_margin = screen_h;
+    }
+
     text_cols = (int) (gfx_screen_width() / FONT_WIDTH);
-    text_rows = (int) (gfx_screen_height() / FONT_HEIGHT);
+    text_rows = (int) ((screen_h - top_margin) / FONT_HEIGHT);
 
     if (text_cols < 1) {
         text_cols = 1;
@@ -72,7 +83,7 @@ void terminal_initialize(void) {
         text_rows = 1;
     }
 
-    gfx_clear(TERM_BG);
+    gfx_fill_rect(0, top_margin, gfx_screen_width(), gfx_screen_height() - top_margin, TERM_BG);
 
     cursor_row = 0;
     cursor_col = 0;
