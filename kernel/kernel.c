@@ -6,7 +6,7 @@
 #include "pic.h"
 #include "keyboard.h"
 #include "io.h"
-#include "shell.h"
+#include "launcher.h"
 #include "memory.h"
 #include "fs.h"
 #include "timer.h"
@@ -35,11 +35,11 @@ void kernel_main(void) {
     mouse_install();
     enable_interrupts();
 
-    shell_init();
+    launcher_init();
 
     for (;;) {
         __asm__ volatile ("hlt");
-        terminal_update_cursor();
+        launcher_update();
         mouse_update_cursor();
     }
 }
