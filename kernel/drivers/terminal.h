@@ -20,6 +20,7 @@ void terminal_print(const char* c);
 void terminal_update_cursor(void);
 
 void terminal_set_top_margin(uint32_t pixels);
+void terminal_set_bottom_margin(uint32_t pixels);
 
 void terminal_redraw(void);
 

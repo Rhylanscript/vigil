@@ -11,6 +11,7 @@
 #include "terminal.h"
 #include "shell.h"
 #include "title_bar.h"
+#include "taskbar.h"
 
 // --- home screen layout (px) ---
 
@@ -21,7 +22,7 @@
 #define HOME_BUTTON_WIDTH       240
 #define HOME_BUTTON_HEIGHT      48
 #define HOME_BUTTON_GAP         16
-#define HOME_HINT_MARGIN        40
+#define HOME_HINT_MARGIN        (TASKBAR_HEIGHT + 40)
 #define HOME_BUTTON_COLOR       ((gfx_color_t){0x30, 0x30, 0x30})
 
 #define HOME_LABEL_MAX          32
@@ -31,6 +32,7 @@
 
 static void start_terminal(void) {
     terminal_set_top_margin(TITLE_BAR_HEIGHT);
+    terminal_set_bottom_margin(TASKBAR_HEIGHT);
     terminal_initialize();
     terminal_print("Terminal - '-' minimizes, 'X' closes\n");
     shell_init();
@@ -59,6 +61,8 @@ static const app_t* volatile running_app = 0;
 static volatile int minimize_requested = 0;
 
 static char home_labels[APP_COUNT][HOME_LABEL_MAX];
+
+static int taskbar_slot_app[APP_COUNT];
 
 // --- helpers ---
 
@@ -97,11 +101,29 @@ static void draw_centered_string(uint32_t y, const char* text, gfx_color_t color
     gfx_draw_string(x, y, text, color);
 }
 
+static void draw_taskbar(void) {
+    taskbar_item_t items[APP_COUNT];
+    int count = 0;
+
+    for (int i = 0; i < APP_COUNT; i++) {
+        if (app_state[i] == APP_STATE_STOPPED) {
+            continue;
+        }
+        items[count].label = apps[i].name;
+        items[count].highlighted = (app_state[i] == APP_STATE_FOREGROUND);
+        taskbar_slot_app[count] = i;
+        count++;
+    }
+
+    taskbar_draw(items, count);
+}
+
 static void draw_home_screen(void) {
     mouse_hide_cursor();
     gfx_clear(GFX_BLACK);
 
     draw_centered_string(HOME_TITLE_Y, HOME_TITLE, GFX_GREEN);
+    draw_taskbar();
 
     for (int i = 0; i < APP_COUNT; i++) {
         build_home_label(i);
@@ -128,9 +150,11 @@ static void launch_app(int index) {
         apps[index].start();
     }
 
-    title_bar_draw(apps[index].name);
-
     app_state[index] = APP_STATE_FOREGROUND;
+
+    title_bar_draw(apps[index].name);
+    draw_taskbar();
+
     running_app = &apps[index];
 }
 
@@ -152,6 +176,24 @@ static void minimize_foreground_app(void) {
 
     app_state[app_index(app)] = APP_STATE_MINIMIZED;
     show_home_screen();
+}
+
+static void switch_to_app(int index) {
+    const app_t* current = running_app;
+
+    if (current != 0) {
+        int current_index = app_index(current);
+
+        if (current_index == index) {
+            minimize_foreground_app();
+            return;
+        }
+
+        app_state[current_index] = APP_STATE_MINIMIZED;
+        running_app = 0;
+    }
+
+    launch_app(index);
 }
 
 // --- keyboard ---
@@ -199,11 +241,23 @@ void launcher_update(void) {
         return;
     }
 
+    int clicked = mouse_left_clicked();
+    int32_t mouse_x = mouse_get_x();
+    int32_t mouse_y = mouse_get_y();
+
+    if (clicked) {
+        int slot = taskbar_hit_test(mouse_x, mouse_y);
+        if (slot >= 0) {
+            switch_to_app(taskbar_slot_app[slot]);
+            return;
+        }
+    }
+
     const app_t* app = running_app;
 
     if (app != 0) {
-        if (mouse_left_clicked()) {
-            title_bar_hit_t hit = title_bar_hit_test(mouse_get_x(), mouse_get_y());
+        if (clicked) {
+            title_bar_hit_t hit = title_bar_hit_test(mouse_x, mouse_y);
 
             if (hit == TITLE_BAR_HIT_CLOSE) {
                 close_foreground_app();
@@ -221,8 +275,8 @@ void launcher_update(void) {
         return;
     }
 
-    if (mouse_left_clicked()) {
-        int index = button_find_at(home_buttons, APP_COUNT, mouse_get_x(), mouse_get_y());
+    if (clicked) {
+        int index = button_find_at(home_buttons, APP_COUNT, mouse_x, mouse_y);
         if (index >= 0) {
             launch_app(index);
         }

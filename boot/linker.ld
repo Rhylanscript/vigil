@@ -28,6 +28,7 @@ SECTIONS
         build/mouse.o(.text)
         build/button.o(.text)
         build/title_bar.o(.text)
+        build/taskbar.o(.text)
         build/launcher.o(.text)
     }
 
@@ -55,6 +56,7 @@ SECTIONS
         build/mouse.o(.rodata)
         build/button.o(.rodata)
         build/title_bar.o(.rodata)
+        build/taskbar.o(.rodata)
         build/launcher.o(.rodata)
     }
 
@@ -82,6 +84,7 @@ SECTIONS
         build/mouse.o(.data)
         build/button.o(.data)
         build/title_bar.o(.data)
+        build/taskbar.o(.data)
         build/launcher.o(.data)
     }
 
@@ -110,6 +113,7 @@ SECTIONS
         build/mouse.o(.bss)
         build/button.o(.bss)
         build/title_bar.o(.bss)
+        build/taskbar.o(.bss)
         build/launcher.o(.bss)
         __bss_end = .;
     }
