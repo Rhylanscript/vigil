@@ -7,6 +7,8 @@ typedef struct {
     const char* name;
 
     void (*start)(void);
+    void (*redraw)(void);
+    
     void (*on_key)(char c);
     void (*on_tick)(void);
 } app_t;
