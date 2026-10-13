@@ -71,12 +71,29 @@ void gfx_draw_char(uint32_t x, uint32_t y, char c, gfx_color_t color) {
     }
 }
 
+void gfx_draw_string(uint32_t x, uint32_t y, const char* str, gfx_color_t color) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        gfx_draw_char(x + (uint32_t) i * FONT_WIDTH, y, str[i], color);
+    }
+}
+
 void gfx_fill_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color) {
     for (uint32_t row = 0; row < height; row++) {
         for (uint32_t col = 0; col < width; col++) {
             gfx_put_pixel(x + col, y + row, color);
         }
     }
+}
+
+void gfx_draw_rect_outline(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color) {
+    if (width == 0 || height == 0) {
+        return;
+    }
+
+    gfx_fill_rect(x, y, width, 1, color);
+    gfx_fill_rect(x, y + height - 1, width, 1, color);
+    gfx_fill_rect(x, y, 1, height, color);
+    gfx_fill_rect(x + width - 1, y, 1, height, color);
 }
 
 void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color) {

@@ -76,6 +76,8 @@ static int32_t cursor_y;
 
 static uint8_t button_state;
 
+static volatile int left_click_pending = 0;
+
 static void process_packet(void) {
     uint8_t flags = packet[0];
 
@@ -84,7 +86,12 @@ static void process_packet(void) {
         return;
     }
 
+    uint8_t previous_buttons = button_state;
     button_state = flags & 0x07;
+
+    if (!(previous_buttons & 0x01) && (button_state & 0x01)) {
+        left_click_pending = 1;
+    }
 
     int32_t dx = packet[1];
     if (flags & 0x10) {
@@ -192,6 +199,13 @@ void mouse_update_cursor(void) {
     cursor_is_drawn = 1;
 }
 
+void mouse_hide_cursor(void) {
+    if (cursor_is_drawn) {
+        restore_under_cursor();
+        cursor_is_drawn = 0;
+    }
+}
+
 // --- public accessors ---
 
 int32_t mouse_get_x(void) { return cursor_x; }
@@ -200,3 +214,9 @@ int32_t mouse_get_y(void) { return cursor_y; }
 int mouse_left_button(void)   { return button_state & 0x01; }
 int mouse_right_button(void)  { return button_state & 0x02; }
 int mouse_middle_button(void) { return button_state & 0x04; }
+
+int mouse_left_clicked(void) {
+    int clicked = left_click_pending;
+    left_click_pending = 0;
+    return clicked;
+}
