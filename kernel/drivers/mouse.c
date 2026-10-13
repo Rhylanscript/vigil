@@ -192,6 +192,13 @@ void mouse_update_cursor(void) {
     cursor_is_drawn = 1;
 }
 
+void mouse_hide_cursor(void) {
+    if (cursor_is_drawn) {
+        restore_under_cursor();
+        cursor_is_drawn = 0;
+    }
+}
+
 // --- public accessors ---
 
 int32_t mouse_get_x(void) { return cursor_x; }
