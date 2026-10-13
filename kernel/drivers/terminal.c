@@ -11,6 +11,9 @@
 #define CURSOR_BAR_HEIGHT 2
 #define CURSOR_BLINK_MS 500
 
+#define TERM_MAX_COLS 128
+#define TERM_MAX_ROWS 48
+
 static int cursor_row;
 static int cursor_col;
 
@@ -22,6 +25,8 @@ static uint32_t last_blink_tick;
 
 static uint32_t top_margin = 0;
 
+static char text_buffer[TERM_MAX_ROWS][TERM_MAX_COLS];
+
 static uint32_t cell_x(int col) {
     return (uint32_t) col * FONT_WIDTH;
 }
@@ -29,8 +34,35 @@ static uint32_t cell_y(int row) {
     return top_margin + (uint32_t) row * FONT_HEIGHT;
 }
 
+static void set_buffer_cell(int col, int row, char c) {
+    if (col < 0 || col >= text_cols || row < 0 || row >= text_rows) {
+        return;
+    }
+    text_buffer[row][col] = c;
+}
+
+static void clear_buffer(void) {
+    for (int row = 0; row < TERM_MAX_ROWS; row++) {
+        for (int col = 0; col < TERM_MAX_COLS; col++) {
+            text_buffer[row][col] = ' ';
+        }
+    }
+}
+
+static void scroll_buffer_up(void) {
+    for (int row = 1; row < text_rows; row++) {
+        for (int col = 0; col < text_cols; col++) {
+            text_buffer[row - 1][col] = text_buffer[row][col];
+        }
+    }
+    for (int col = 0; col < text_cols; col++) {
+        text_buffer[text_rows - 1][col] = ' ';
+    }
+}
+
 static void clear_cell(int col, int row) {
     gfx_fill_rect(cell_x(col), cell_y(row), FONT_WIDTH, FONT_HEIGHT, TERM_BG);
+    set_buffer_cell(col, row, ' ');
 }
 
 static void draw_cursor_bar(void) {
@@ -58,6 +90,7 @@ static void scroll_if_needed(void) {
     }
 
     gfx_scroll_region_up(top_margin, (uint32_t) FONT_HEIGHT, TERM_BG);
+    scroll_buffer_up();
     cursor_row = text_rows - 1;
 }
 
@@ -82,6 +115,15 @@ void terminal_initialize(void) {
     if (text_rows < 1) {
         text_rows = 1;
     }
+
+    if (text_cols > TERM_MAX_COLS) {
+        text_cols = TERM_MAX_COLS;
+    }
+    if (text_rows > TERM_MAX_ROWS) {
+        text_rows = TERM_MAX_ROWS;
+    }
+
+    clear_buffer();
 
     gfx_fill_rect(0, top_margin, gfx_screen_width(), gfx_screen_height() - top_margin, TERM_BG);
 
@@ -111,6 +153,7 @@ void terminal_putchar(char c) {
     } else {
         clear_cell(cursor_col, cursor_row);
         gfx_draw_char(cell_x(cursor_col), cell_y(cursor_row), c, TERM_FG);
+        set_buffer_cell(cursor_col, cursor_row, c);
 
         cursor_col++;
         if (cursor_col >= text_cols) {
@@ -155,4 +198,21 @@ void terminal_update_cursor(void) {
     } else {
         erase_cursor_bar();
     }
+}
+
+void terminal_redraw(void) {
+    gfx_fill_rect(0, top_margin, gfx_screen_width(), gfx_screen_height() - top_margin, TERM_BG);
+
+    for (int row = 0; row < text_rows; row++) {
+        for (int col = 0; col < text_cols; col++) {
+            char c = text_buffer[row][col];
+            if (c != ' ') {
+                gfx_draw_char(cell_x(col), cell_y(row), c, TERM_FG);
+            }
+        }
+    }
+
+    cursor_blink_on = 1;
+    draw_cursor_bar();
+    last_blink_tick = timer_get_ticks();
 }
