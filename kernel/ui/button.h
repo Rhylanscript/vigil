@@ -21,5 +21,6 @@ void button_draw(const button_t* button);
 
 int button_contains(const button_t* button, int32_t px, int32_t py);
 int button_dispatch_click(const button_t* buttons, int count, int32_t px, int32_t py);
+int button_find_at(const button_t* buttons, int count, int32_t px, int32_t py);
 
 #endif

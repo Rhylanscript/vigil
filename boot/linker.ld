@@ -27,6 +27,7 @@ SECTIONS
         build/graphics.o(.text)
         build/mouse.o(.text)
         build/button.o(.text)
+        build/launcher.o(.text)
     }
 
     .rodata : {
@@ -52,6 +53,7 @@ SECTIONS
         build/graphics.o(.rodata)
         build/mouse.o(.rodata)
         build/button.o(.rodata)
+        build/launcher.o(.rodata)
     }
 
     .data : {
@@ -77,6 +79,7 @@ SECTIONS
         build/graphics.o(.data)
         build/mouse.o(.data)
         build/button.o(.data)
+        build/launcher.o(.data)
     }
 
     .bss : {
@@ -103,6 +106,7 @@ SECTIONS
         build/graphics.o(.bss)
         build/mouse.o(.bss)
         build/button.o(.bss)
+        build/launcher.o(.bss)
         __bss_end = .;
     }
 }
