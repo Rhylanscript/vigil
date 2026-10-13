@@ -10,7 +10,7 @@ if not exist "build" (
     echo.
 )
 
-set CFLAGS=-ffreestanding -Iboot/cpu -Iboot/drivers -Iboot/shell -Iboot/lib -Iboot/vigil -Iboot/fs -Iboot/mem
+set CFLAGS=-ffreestanding -Ikernel/cpu -Ikernel/drivers -Iapps/shell -Ikernel/lib -Ikernel/vigil -Ikernel/fs -Ikernel/mem
 
 echo Assembling boot.asm...
 nasm -f bin boot/boot.asm -o build/boot.bin
@@ -21,87 +21,87 @@ nasm -f elf32 boot/stage2.asm -o build/stage2.o
 if errorlevel 1 goto :error
 
 echo Compiling kernel.c...
-i686-elf-gcc %CFLAGS% -c boot/kernel.c -o build/kernel.o
+i686-elf-gcc %CFLAGS% -c kernel/kernel.c -o build/kernel.o
 if errorlevel 1 goto :error
 
 echo Compiling terminal.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/terminal.c -o build/terminal.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/terminal.c -o build/terminal.o
 if errorlevel 1 goto :error
 
 echo Compiling idt.c...
-i686-elf-gcc %CFLAGS% -c boot/cpu/idt.c -o build/idt.o
+i686-elf-gcc %CFLAGS% -c kernel/cpu/idt.c -o build/idt.o
 if errorlevel 1 goto :error
 
 echo Compiling isr.c...
-i686-elf-gcc %CFLAGS% -c boot/cpu/isr.c -o build/isr.o
+i686-elf-gcc %CFLAGS% -c kernel/cpu/isr.c -o build/isr.o
 if errorlevel 1 goto :error
 
 echo Assembling isr.asm...
-nasm -f elf32 boot/cpu/isr.asm -o build/isr_asm.o
+nasm -f elf32 kernel/cpu/isr.asm -o build/isr_asm.o
 if errorlevel 1 goto :error
 
 echo Assembling idt_load.asm...
-nasm -f elf32 boot/cpu/idt_load.asm -o build/idt_load.o
+nasm -f elf32 kernel/cpu/idt_load.asm -o build/idt_load.o
 if errorlevel 1 goto :error
 
 echo Compiling pic.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/pic.c -o build/pic.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/pic.c -o build/pic.o
 if errorlevel 1 goto :error
 
 echo Compiling irq.c...
-i686-elf-gcc %CFLAGS% -c boot/cpu/irq.c -o build/irq.o
+i686-elf-gcc %CFLAGS% -c kernel/cpu/irq.c -o build/irq.o
 if errorlevel 1 goto :error
 
 echo Assembling irq.asm...
-nasm -f elf32 boot/cpu/irq.asm -o build/irq_asm.o
+nasm -f elf32 kernel/cpu/irq.asm -o build/irq_asm.o
 if errorlevel 1 goto :error
 
 echo Compiling keyboard.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/keyboard.c -o build/keyboard.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/keyboard.c -o build/keyboard.o
 if errorlevel 1 goto :error
 
 echo Compiling kstring.c...
-i686-elf-gcc %CFLAGS% -c boot/lib/kstring.c -o build/kstring.o
+i686-elf-gcc %CFLAGS% -c kernel/lib/kstring.c -o build/kstring.o
 if errorlevel 1 goto :error
 
 echo Compiling kprintf.c...
-i686-elf-gcc %CFLAGS% -c boot/lib/kprintf.c -o build/kprintf.o
+i686-elf-gcc %CFLAGS% -c kernel/lib/kprintf.c -o build/kprintf.o
 if errorlevel 1 goto :error
 
 echo Compiling shell.c...
-i686-elf-gcc %CFLAGS% -c boot/shell/shell.c -o build/shell.o
+i686-elf-gcc %CFLAGS% -c apps/shell/shell.c -o build/shell.o
 if errorlevel 1 goto :error
 
 echo Compiling ata.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/ata.c -o build/ata.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/ata.c -o build/ata.o
 if errorlevel 1 goto :error
 
 echo Compiling memory.c...
-i686-elf-gcc %CFLAGS% -c boot/vigil/memory.c -o build/vigil_memory.o
+i686-elf-gcc %CFLAGS% -c kernel/vigil/memory.c -o build/vigil_memory.o
 if errorlevel 1 goto :error
 
 echo Compiling fs.c...
-i686-elf-gcc %CFLAGS% -c boot/fs/fs.c -o build/fs.o
+i686-elf-gcc %CFLAGS% -c kernel/fs/fs.c -o build/fs.o
 if errorlevel 1 goto :error
 
 echo Compiling timer.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/timer.c -o build/timer.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/timer.c -o build/timer.o
 if errorlevel 1 goto :error
 
 echo Compiling heap.c...
-i686-elf-gcc %CFLAGS% -c boot/mem/heap.c -o build/heap.o
+i686-elf-gcc %CFLAGS% -c kernel/mem/heap.c -o build/heap.o
 if errorlevel 1 goto :error
 
 echo Compiling font.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/font.c -o build/font.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/font.c -o build/font.o
 if errorlevel 1 goto :error
 
 echo Compiling graphics.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/graphics.c -o build/graphics.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/graphics.c -o build/graphics.o
 if errorlevel 1 goto :error
 
 echo Compiling mouse.c...
-i686-elf-gcc %CFLAGS% -c boot/drivers/mouse.c -o build/mouse.o
+i686-elf-gcc %CFLAGS% -c kernel/drivers/mouse.c -o build/mouse.o
 if errorlevel 1 goto :error
 
 echo.
