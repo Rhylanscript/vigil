@@ -15,7 +15,7 @@
 // --- home screen layout (px) ---
 
 #define HOME_TITLE              "VIGIL"
-#define HOME_HINT               "Press ESC to minimize an app, click X to close it"
+#define HOME_HINT               "Click '-' to minimize an app, click 'X' to close it"
 #define HOME_TITLE_Y            120
 #define HOME_FIRST_BUTTON_Y     200
 #define HOME_BUTTON_WIDTH       240
@@ -32,7 +32,7 @@
 static void start_terminal(void) {
     terminal_set_top_margin(TITLE_BAR_HEIGHT);
     terminal_initialize();
-    terminal_print("Terminal - ESC minimizes, X closes\n");
+    terminal_print("Terminal - '-' minimizes, 'X' closes\n");
     shell_init();
 }
 
@@ -203,8 +203,14 @@ void launcher_update(void) {
 
     if (app != 0) {
         if (mouse_left_clicked()) {
-            if (title_bar_hit_test(mouse_get_x(), mouse_get_y()) == TITLE_BAR_HIT_CLOSE) {
+            title_bar_hit_t hit = title_bar_hit_test(mouse_get_x(), mouse_get_y());
+
+            if (hit == TITLE_BAR_HIT_CLOSE) {
                 close_foreground_app();
+                return;
+            }
+            if (hit == TITLE_BAR_HIT_MINIMIZE) {
+                minimize_foreground_app();
                 return;
             }
         }

@@ -9,6 +9,7 @@
 typedef enum {
     TITLE_BAR_HIT_NONE = 0,
     TITLE_BAR_HIT_CLOSE,
+    TITLE_BAR_HIT_MINIMIZE,
 } title_bar_hit_t;
 
 void title_bar_draw(const char* title);
