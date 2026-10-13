@@ -6,6 +6,8 @@
 #define KEY_ARROW_UP 0x01
 #define KEY_ARROW_DOWN 0x02
 
+#define KEY_ESCAPE 27
+
 typedef void (*keyboard_handler_t)(char c);
 
 void keyboard_install(void);

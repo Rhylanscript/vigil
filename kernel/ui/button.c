@@ -45,3 +45,12 @@ int button_dispatch_click(const button_t* buttons, int count, int32_t px, int32_
     }
     return 0;
 }
+
+int button_find_at(const button_t* buttons, int count, int32_t px, int32_t py) {
+    for (int i = 0; i < count; i++) {
+        if (button_contains(&buttons[i], px, py)) {
+            return i;
+        }
+    }
+    return -1;
+}
