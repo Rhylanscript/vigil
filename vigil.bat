@@ -37,7 +37,7 @@ echo [ERROR] unknown command: vigil %SUBCOMMAND%
 goto :usage
 
 :missing
-echo [ERROR] &SUBCOMMAND%.bat missing from scripts/
+echo [ERROR] %SUBCOMMAND%.bat missing from scripts/
 exit /b 1
 
 :usage
