@@ -1,4 +1,4 @@
-// boot/shell/shell.c
+// apps/shell/shell.c
 
 #include "shell.h"
 #include "keyboard.h"
