@@ -96,13 +96,19 @@ void gfx_draw_rect_outline(uint32_t x, uint32_t y, uint32_t width, uint32_t heig
     gfx_fill_rect(x + width - 1, y, 1, height, color);
 }
 
-void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color) {
-    if (pixel_rows >= screen_height) {
-        gfx_clear(fill_color);
+void gfx_scroll_region_up(uint32_t top_y, uint32_t pixel_rows, gfx_color_t fill_color) {
+    if (top_y >= screen_height) {
         return;
     }
 
-    for (uint32_t y = 0; y < screen_height - pixel_rows; y++) {
+    uint32_t region_height = screen_height - top_y;
+
+    if (pixel_rows >= region_height) {
+        gfx_fill_rect(0, top_y, screen_width, region_height, fill_color);
+        return;
+    }
+
+    for (uint32_t y = top_y; y < screen_height - pixel_rows; y++) {
         uint8_t* dst = framebuffer + (y * pitch);
         uint8_t* src = framebuffer + ((y + pixel_rows) * pitch);
         for (uint32_t b = 0; b < pitch; b++) {
@@ -119,6 +125,10 @@ void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color) {
             pixel[2] = fill_color.r;
         }
     }
+}
+
+void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color) {
+    gfx_scroll_region_up(0, pixel_rows, fill_color);
 }
 
 uint32_t gfx_screen_width(void) {

@@ -36,5 +36,6 @@ uint32_t gfx_screen_width(void);
 uint32_t gfx_screen_height(void);
 
 void gfx_scroll_up(uint32_t pixel_rows, gfx_color_t fill_color);
+void gfx_scroll_region_up(uint32_t top_y, uint32_t pixel_rows, gfx_color_t fill_color);
 
 #endif
