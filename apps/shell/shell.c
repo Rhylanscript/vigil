@@ -248,7 +248,7 @@ static void execute_command(char* line) {
     terminal_print("\n");
 }
 
-static void shell_handle_char(char c) {
+void shell_handle_char(char c) {
     if (c == KEY_ARROW_UP) {
         history_recall_previous();
         return;
@@ -288,7 +288,7 @@ static void shell_handle_char(char c) {
 
 void shell_init(void) {
     input_length = 0;
+    browse_offset = 0;
     terminal_print("\n");
     print_prompt();
-    keyboard_set_handler(shell_handle_char);
 }
