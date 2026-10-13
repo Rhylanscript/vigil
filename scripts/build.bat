@@ -10,7 +10,7 @@ if not exist "build" (
     echo.
 )
 
-set CFLAGS=-ffreestanding -Ikernel/cpu -Ikernel/drivers -Iapps/shell -Ikernel/lib -Ikernel/vigil -Ikernel/fs -Ikernel/mem
+set CFLAGS=-ffreestanding -Ikernel/cpu -Ikernel/drivers -Iapps/shell -Ikernel/lib -Ikernel/vigil -Ikernel/fs -Ikernel/mem -Ikernel/ui
 
 echo Assembling boot.asm...
 nasm -f bin boot/boot.asm -o build/boot.bin
@@ -104,12 +104,16 @@ echo Compiling mouse.c...
 i686-elf-gcc %CFLAGS% -c kernel/drivers/mouse.c -o build/mouse.o
 if errorlevel 1 goto :error
 
+echo Compiling button.c...
+i686-elf-gcc %CFLAGS% -c kernel/ui/button.c -o build/button.o
+if errorlevel 1 goto :error
+
 echo.
 echo Beginning img build...
 echo.
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o
 if errorlevel 1 goto :error
 
 echo.

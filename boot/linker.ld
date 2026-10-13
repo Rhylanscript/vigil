@@ -26,6 +26,7 @@ SECTIONS
         build/font.o(.text)
         build/graphics.o(.text)
         build/mouse.o(.text)
+        build/button.o(.text)
     }
 
     .rodata : {
@@ -50,6 +51,7 @@ SECTIONS
         build/font.o(.rodata)
         build/graphics.o(.rodata)
         build/mouse.o(.rodata)
+        build/button.o(.rodata)
     }
 
     .data : {
@@ -74,6 +76,7 @@ SECTIONS
         build/font.o(.data)
         build/graphics.o(.data)
         build/mouse.o(.data)
+        build/button.o(.data)
     }
 
     .bss : {
@@ -99,6 +102,7 @@ SECTIONS
         build/font.o(.bss)
         build/graphics.o(.bss)
         build/mouse.o(.bss)
+        build/button.o(.bss)
         __bss_end = .;
     }
 }
