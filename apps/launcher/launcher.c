@@ -9,9 +9,11 @@
 #include "keyboard.h"
 #include "mouse.h"
 #include "terminal.h"
-#include "shell.h"
 #include "title_bar.h"
 #include "taskbar.h"
+
+#include "shell.h"
+#include "notepad.h"
 
 // --- home screen layout (px) ---
 
@@ -40,6 +42,7 @@ static void start_terminal(void) {
 
 static const app_t apps[] = {
     { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor },
+    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor },
 };
 
 #define APP_COUNT ((int) (sizeof(apps) / sizeof(apps[0])))
