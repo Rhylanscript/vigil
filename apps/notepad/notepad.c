@@ -31,6 +31,9 @@
 
 #define TAB_WIDTH           4
 
+#define NOTEPAD_MAX_COLS    128
+#define NOTEPAD_MAX_ROWS    48
+
 // --- state ---
 
 static char text[NOTEPAD_MAX_BYTES];
@@ -50,6 +53,9 @@ static uint32_t last_blink_tick;
 
 static const char* status_note = "";
 
+static char shown[NOTEPAD_MAX_ROWS][NOTEPAD_MAX_COLS];
+static char wanted[NOTEPAD_MAX_ROWS][NOTEPAD_MAX_COLS];
+
 // --- layout helpers & stuff ---
 
 static void compute_layout(void) {
@@ -67,6 +73,12 @@ static void compute_layout(void) {
     }
     if (text_rows < STATUS_ROWS + 1) {
         text_rows = STATUS_ROWS + 1;
+    }
+    if (text_cols > NOTEPAD_MAX_COLS) {
+        text_cols = NOTEPAD_MAX_COLS;
+    }
+    if (text_rows > NOTEPAD_MAX_ROWS) {
+        text_rows = NOTEPAD_MAX_ROWS;
     }
 }
 
@@ -147,10 +159,6 @@ static void update_cursor_position(void) {
 
 // --- drawing ---
 
-static void clear_cell(int col, int row) {
-    gfx_fill_rect(cell_x(col), cell_y(row), FONT_WIDTH, FONT_HEIGHT, NOTE_BG);
-}
-
 static void paint_cursor_bar(gfx_color_t color) {
     gfx_fill_rect(
         cell_x(cursor_col),
@@ -208,33 +216,47 @@ static void draw_status(void) {
     gfx_draw_string(STATUS_TEXT_X, y, line, NOTE_FG);
 }
 
-static void draw_text_from_row(int first_row) {
+static void draw_cell(int col, int row, char c) {
+    gfx_draw_char_bg(cell_x(col), cell_y(row), c, NOTE_FG, NOTE_BG);
+}
+
+static void reset_shown(void) {
+    for (int row = 0; row < NOTEPAD_MAX_ROWS; row++) {
+        for (int col = 0; col < NOTEPAD_MAX_COLS; col++) {
+            shown[row][col] = ' ';
+        }
+    }
+}
+
+static void build_wanted(void) {
+    for (int row = 0; row < visible_rows(); row++) {
+        for (int col = 0; col < text_cols; col++) {
+            wanted[row][col] = ' ';
+        }
+    }
+
     int row = 0;
     int col = 0;
 
     for (int i = 0; i < length && row < visible_rows(); i++) {
-        if (row >= first_row && text[i] != '\n') {
-            gfx_draw_char(cell_x(col), cell_y(row), text[i], NOTE_FG);
+        if (text[i] != '\n') {
+            wanted[row][col] = text[i];
         }
         advance(text[i], &row, &col);
     }
 }
 
-static void repaint_from(int index) {
-    int first_row;
-    int col;
-    find_cell(index, &first_row, &col);
+static void refresh_text(void) {
+    build_wanted();
 
-    if (first_row >= visible_rows()) {
-        return;
+    for (int row = 0; row < visible_rows(); row++) {
+        for (int col = 0; col < text_cols; col++) {
+            if (wanted[row][col] != shown[row][col]) {
+                draw_cell(col, row, wanted[row][col]);
+                shown[row][col] = wanted[row][col];
+            }
+        }
     }
-
-    gfx_fill_rect(
-        0, cell_y(first_row),
-        gfx_screen_width(), (uint32_t) (visible_rows() - first_row) * FONT_HEIGHT,
-        NOTE_BG
-    );
-    draw_text_from_row(first_row);
 }
 
 static void paint_screen(void) {
@@ -244,7 +266,8 @@ static void paint_screen(void) {
         NOTE_BG
     );
 
-    draw_text_from_row(0);
+    reset_shown();
+    refresh_text();
     draw_status();
 
     update_cursor_position();
@@ -315,7 +338,6 @@ static int insert_char(char c) {
     hide_cursor();
 
     int old_index = cursor_index;
-    int appending = (cursor_index == length);
 
     text_insert(old_index, c);
 
@@ -329,13 +351,7 @@ static int insert_char(char c) {
 
     cursor_index++;
 
-    if (appending) {
-        if (c != '\n') {
-            gfx_draw_char(cell_x(cursor_col), cell_y(cursor_row), c, NOTE_FG);
-        }
-    } else {
-        repaint_from(old_index);
-    }
+    refresh_text();
 
     update_cursor_position();
     desired_col = cursor_col;
@@ -363,18 +379,12 @@ static void backspace(void) {
 
     hide_cursor();
 
-    int at_end = (cursor_index == length);
-
     cursor_index--;
     text_remove(cursor_index);
     update_cursor_position();
     desired_col = cursor_col;
 
-    if (at_end) {
-        clear_cell(cursor_col, cursor_row);
-    } else {
-        repaint_from(cursor_index);
-    }
+    refresh_text();
 
     status_note = "unsaved changes";
     draw_status();
@@ -389,7 +399,7 @@ static void delete_forward(void) {
     hide_cursor();
 
     text_remove(cursor_index);
-    repaint_from(cursor_index);
+    refresh_text();
     desired_col = cursor_col;
 
     status_note = "unsaved changes";
