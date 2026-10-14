@@ -19,17 +19,15 @@ typedef struct {
 void gfx_init(void);
 
 void gfx_put_pixel(uint32_t x, uint32_t y, gfx_color_t color);
-
 gfx_color_t gfx_get_pixel(uint32_t x, uint32_t y);
 
 void gfx_clear(gfx_color_t color);
 
 void gfx_draw_char(uint32_t x, uint32_t y, char c, gfx_color_t color);
-
+void gfx_draw_char_bg(uint32_t x, uint32_t y, char c, gfx_color_t fg, gfx_color_t bg);
 void gfx_draw_string(uint32_t x, uint32_t y, const char* str, gfx_color_t color);
 
 void gfx_fill_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color);
-
 void gfx_draw_rect_outline(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color);
 
 uint32_t gfx_screen_width(void);

@@ -259,6 +259,10 @@ void shell_handle_char(char c) {
         return;
     }
 
+    if (c == KEY_CTRL_S || c == KEY_ARROW_LEFT || c == KEY_ARROW_RIGHT || c == KEY_HOME || c == KEY_END || c == KEY_DELETE) {
+        return;
+    }
+
     browse_offset = 0;
 
     if (c == '\n') {

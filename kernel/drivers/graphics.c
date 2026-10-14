@@ -70,6 +70,21 @@ void gfx_draw_char(uint32_t x, uint32_t y, char c, gfx_color_t color) {
         }
     }
 }
+void gfx_draw_char_bg(uint32_t x, uint32_t y, char c, gfx_color_t fg, gfx_color_t bg) {
+    const uint8_t* glyph = 0;
+    if (c >= FONT_FIRST_CHAR && c <= FONT_LAST_CHAR) {
+        glyph = font8x16[c - FONT_FIRST_CHAR];
+    }
+
+    for (int row = 0; row < FONT_HEIGHT; row++) {
+        uint8_t row_bits = (glyph != 0) ? glyph[row] : 0;
+
+        for (int col = 0; col < FONT_WIDTH; col++) {
+            uint8_t mask = 0x80 >> col;
+            gfx_put_pixel(x + col, y + row, (row_bits & mask) ? fg : bg);
+        }
+    }
+}
 
 void gfx_draw_string(uint32_t x, uint32_t y, const char* str, gfx_color_t color) {
     for (int i = 0; str[i] != '\0'; i++) {

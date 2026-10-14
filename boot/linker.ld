@@ -31,6 +31,7 @@ SECTIONS
         build/title_bar.o(.text)
         build/taskbar.o(.text)
         build/launcher.o(.text)
+        build/notepad.o(.text)
     }
 
     .rodata : {
@@ -60,6 +61,7 @@ SECTIONS
         build/title_bar.o(.rodata)
         build/taskbar.o(.rodata)
         build/launcher.o(.rodata)
+        build/notepad.o(.rodata)
     }
 
     .data : {
@@ -89,6 +91,7 @@ SECTIONS
         build/title_bar.o(.data)
         build/taskbar.o(.data)
         build/launcher.o(.data)
+        build/notepad.o(.data)
     }
 
     .bss : {
@@ -119,6 +122,7 @@ SECTIONS
         build/title_bar.o(.bss)
         build/taskbar.o(.bss)
         build/launcher.o(.bss)
+        build/notepad.o(.bss)
         __bss_end = .;
     }
 }
