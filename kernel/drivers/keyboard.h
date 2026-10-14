@@ -7,6 +7,7 @@
 #define KEY_ARROW_DOWN 0x02
 
 #define KEY_ESCAPE 27
+#define KEY_CTRL_S 0x13
 
 typedef void (*keyboard_handler_t)(char c);
 

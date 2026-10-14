@@ -39,13 +39,18 @@ static const char scancode_to_ascii_shifted[128] = {
     ' '
 };
 
-#define SC_LSHIFT_PRESS   0x2a
-#define SC_RSHIFT_PRESS   0x36
-#define SC_LSHIFT_RELEASE 0xaa
-#define SC_RSHIFT_RELEASE 0xb6
-#define SC_CAPSLOCK_PRESS 0x3a
+#define SC_LSHIFT_PRESS     0x2a
+#define SC_RSHIFT_PRESS     0x36
+#define SC_LSHIFT_RELEASE   0xaa
+#define SC_RSHIFT_RELEASE   0xb6
+
+#define SC_CAPSLOCK_PRESS   0x3a
+
+#define SC_CTRL_PRESS       0x1d
+#define SC_CTRL_RELEASE     0x9d
 
 static int shift_held = 0;
+static int ctrl_held = 0;
 static int caps_active = 0;
 static int extended_prefix = 0;
 static keyboard_handler_t input_handler = 0;
@@ -66,6 +71,15 @@ static void keyboard_callback(struct registers regs) {
 
     if (extended_prefix) {
         extended_prefix = 0;
+
+        if (scancode == SC_CTRL_PRESS) {
+            ctrl_held = 1;
+            return;
+        }
+        if (scancode == SC_CTRL_RELEASE) {
+            ctrl_held = 0;
+            return;
+        }
 
         if (scancode & 0x80) {
             return;
@@ -92,11 +106,27 @@ static void keyboard_callback(struct registers regs) {
         return;
     }
 
+    if (scancode == SC_CTRL_PRESS) {
+        ctrl_held = 1;
+        return;
+    }
+    if (scancode == SC_CTRL_RELEASE) {
+        ctrl_held = 0;
+        return;
+    }
+
     if (scancode & 0x80) {
         return;
     }
 
     char lower = scancode_to_ascii[scancode];
+    if (ctrl_held) {
+        if (lower == 's' && input_handler != 0) {
+            input_handler(KEY_CTRL_S);
+        }
+        return;
+    }
+
     int use_shifted = shift_held;
 
     if (caps_active && lower >= 'a' && lower <= 'z') {
