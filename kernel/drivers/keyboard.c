@@ -49,6 +49,16 @@ static const char scancode_to_ascii_shifted[128] = {
 #define SC_CTRL_PRESS       0x1d
 #define SC_CTRL_RELEASE     0x9d
 
+#define SC_EXT_UP           0x48
+#define SC_EXT_DOWN         0x50
+#define SC_EXT_LEFT         0x4b
+#define SC_EXT_RIGHT        0x4d
+
+#define SC_EXT_HOME         0x47
+#define SC_EXT_END          0x4f
+
+#define SC_EXT_DELETE       0x53
+
 static int shift_held = 0;
 static int ctrl_held = 0;
 static int caps_active = 0;
@@ -57,6 +67,21 @@ static keyboard_handler_t input_handler = 0;
 
 void keyboard_set_handler(keyboard_handler_t handler) {
     input_handler = handler;
+}
+static char extended_scancode_to_key(unsigned char scancode) {
+    switch (scancode) {
+        case SC_EXT_UP:     return KEY_ARROW_UP;
+        case SC_EXT_DOWN:   return KEY_ARROW_DOWN;
+        case SC_EXT_LEFT:   return KEY_ARROW_LEFT;
+        case SC_EXT_RIGHT:  return KEY_ARROW_RIGHT;
+
+        case SC_EXT_HOME:   return KEY_HOME;
+        case SC_EXT_END:    return KEY_END;
+        
+        case SC_EXT_DELETE: return KEY_DELETE;
+        
+        default:            return 0;
+    }
 }
 
 static void keyboard_callback(struct registers regs) {
@@ -85,10 +110,9 @@ static void keyboard_callback(struct registers regs) {
             return;
         }
 
-        if (scancode == 0x48 && input_handler != 0) {
-            input_handler(KEY_ARROW_UP);
-        } else if (scancode == 0x50 && input_handler != 0) {
-            input_handler(KEY_ARROW_DOWN);
+        char key = extended_scancode_to_key(scancode);
+        if (key != 0 && input_handler != 0) {
+            input_handler(key);
         }
         return;
     }
