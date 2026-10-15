@@ -1,6 +1,13 @@
 ; boot/boot.asm
 ; stage 1 bootloader thats runs stage 2 from disk, then jumps to it
 
+SECTOR_COUNT equ 120 ; number of sectors to read
+
+; Each sector is 512 bytes, so 2 sectors = 1 KB
+
+; IMPORTANT: Keep sector read under ~127, which is the most a
+; single BIOS extended read can definitely handle
+
 [org 0x7c00]
 [bits 16]
 
@@ -38,15 +45,8 @@ dap:
     ; size of packet in bytes, always 16 (0x10)
     db 0
     ; reserved by bios spec (always 0)
-    dw 120
-    ; number of sectors to read. Each sector is 512 bytes, so 120
-    ; sectors = ~60kb. If this is changed, padding size (in
-    ; scripts\build.bat) also needs to be changed to match
-    ; accordingly (padding bytes = sectors * 512)
-
-    ; IMPORTANT: Keep sector read under ~127, which is the most a
-    ; single BIOS extended read 100% can handle.
-
+    dw SECTOR_COUNT
+    ; number of sectors read
     dw 0x7e00
     ; offset of where to load data in memory
     dw 0x0000
