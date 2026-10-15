@@ -499,6 +499,17 @@ void notepad_handle_char(char c) {
     // ignore any other input
 }
 
+void notepad_handle_click(int32_t x, int32_t y) {
+    int col = (int) (x / FONT_WIDTH);
+    int row = (int) ((y - NOTEPAD_TOP) / FONT_HEIGHT);
+
+    if (row < 0 || row >= visible_rows()) {
+        return;
+    }
+
+    move_cursor(index_at(row, col), 0);
+}
+
 void notepad_update_cursor(void) {
     uint32_t frequency = timer_get_frequency();
     if (frequency == 0) {

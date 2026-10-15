@@ -41,8 +41,8 @@ static void start_terminal(void) {
 }
 
 static const app_t apps[] = {
-    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor },
-    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor },
+    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0 },
+    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click },
 };
 
 #define APP_COUNT ((int) (sizeof(apps) / sizeof(apps[0])))
@@ -225,6 +225,12 @@ static void drain_key_queue(void) {
 
 // --- public functions & stuff™ ---
 
+static int click_is_in_app_band(int32_t py) {
+    int32_t top = TITLE_BAR_HEIGHT;
+    int32_t bottom = (int32_t) gfx_screen_height() - TASKBAR_HEIGHT;
+    return py >= top && py < bottom;
+}
+
 void launcher_init(void) {
     uint32_t button_x = (gfx_screen_width() - HOME_BUTTON_WIDTH) / 2;
 
@@ -269,6 +275,10 @@ void launcher_update(void) {
             if (hit == TITLE_BAR_HIT_MINIMIZE) {
                 minimize_foreground_app();
                 return;
+            }
+            if (app->on_click != 0 && click_is_in_app_band(mouse_y)) {
+                mouse_hide_cursor();
+                app->on_click(mouse_x, mouse_y);
             }
         }
 
