@@ -140,7 +140,10 @@ if errorlevel 1 goto :error
 echo.
 
 if exist build\padding.bin del build\padding.bin
-fsutil file createnew build\padding.bin 32768 >nul
+:: this number should be 512 * the sector read size specified 
+:: in boot\boot.asm 
+
+fsutil file createnew build\padding.bin 61440 >nul
 
 if not exist "dist" (
     echo dist folder not found, creating at root directory...
