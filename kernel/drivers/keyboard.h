@@ -17,9 +17,8 @@
 
 #define KEY_DELETE      0x7f
 
-typedef void (*keyboard_handler_t)(char c);
-
 void keyboard_install(void);
-void keyboard_set_handler(keyboard_handler_t handler);
+
+int keyboard_pop(char* out);
 
 #endif

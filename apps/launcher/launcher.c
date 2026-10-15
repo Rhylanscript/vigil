@@ -61,8 +61,6 @@ static app_state_t app_state[APP_COUNT];
 
 static const app_t* volatile running_app = 0;
 
-static volatile int minimize_requested = 0;
-
 static char home_labels[APP_COUNT][HOME_LABEL_MAX];
 
 static int taskbar_slot_app[APP_COUNT];
@@ -201,7 +199,7 @@ static void switch_to_app(int index) {
 
 // --- keyboard ---
 
-static void launcher_on_key(char c) {
+static void launcher_handle_key(char c) {
     const app_t* app = running_app;
 
     if (app == 0) {
@@ -209,12 +207,19 @@ static void launcher_on_key(char c) {
     }
 
     if (c == KEY_ESCAPE) {
-        minimize_requested = 1;
+        minimize_foreground_app();
         return;
     }
 
     if (app->on_key != 0) {
         app->on_key(c);
+    }
+}
+
+static void drain_key_queue(void) {
+    char c;
+    while (keyboard_pop(&c)) {
+        launcher_handle_key(c);
     }
 }
 
@@ -233,16 +238,11 @@ void launcher_init(void) {
         home_buttons[i].on_click = 0;
     }
 
-    keyboard_set_handler(launcher_on_key);
     show_home_screen();
 }
 
 void launcher_update(void) {
-    if (minimize_requested) {
-        minimize_requested = 0;
-        minimize_foreground_app();
-        return;
-    }
+    drain_key_queue();
 
     int clicked = mouse_left_clicked();
     int32_t mouse_x = mouse_get_x();

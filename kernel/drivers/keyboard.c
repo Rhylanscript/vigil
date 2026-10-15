@@ -3,7 +3,6 @@
 #include "keyboard.h"
 #include "irq.h"
 #include "io.h"
-#include "terminal.h"
 
 static const char scancode_to_ascii[128] = {
     0, 27,
@@ -59,15 +58,34 @@ static const char scancode_to_ascii_shifted[128] = {
 
 #define SC_EXT_DELETE       0x53
 
+#define KEY_QUEUE_SIZE      64
+
 static int shift_held = 0;
 static int ctrl_held = 0;
 static int caps_active = 0;
 static int extended_prefix = 0;
-static keyboard_handler_t input_handler = 0;
 
-void keyboard_set_handler(keyboard_handler_t handler) {
-    input_handler = handler;
+static volatile char key_queue[KEY_QUEUE_SIZE];
+
+static volatile int queue_head = 0;
+static volatile int queue_tail = 0;
+
+static void key_queue_push(char c) {
+    int next = (queue_head + 1) % KEY_QUEUE_SIZE;
+    if (next == queue_tail) return;
+
+    key_queue[queue_head] = c;
+    queue_head = next;
 }
+
+int keyboard_pop(char* out) {
+    if (queue_tail == queue_head) return 0;
+
+    *out = key_queue[queue_tail];
+    queue_tail = (queue_tail + 1) % KEY_QUEUE_SIZE;
+    return 1;
+}
+
 static char extended_scancode_to_key(unsigned char scancode) {
     switch (scancode) {
         case SC_EXT_UP:     return KEY_ARROW_UP;
@@ -111,8 +129,8 @@ static void keyboard_callback(struct registers regs) {
         }
 
         char key = extended_scancode_to_key(scancode);
-        if (key != 0 && input_handler != 0) {
-            input_handler(key);
+        if (key != 0) {
+            key_queue_push(key);
         }
         return;
     }
@@ -145,8 +163,8 @@ static void keyboard_callback(struct registers regs) {
 
     char lower = scancode_to_ascii[scancode];
     if (ctrl_held) {
-        if (lower == 's' && input_handler != 0) {
-            input_handler(KEY_CTRL_S);
+        if (lower == 's') {
+            key_queue_push(KEY_CTRL_S);
         }
         return;
     }
@@ -159,11 +177,7 @@ static void keyboard_callback(struct registers regs) {
 
     char c = use_shifted ? scancode_to_ascii_shifted[scancode] : lower;
     if (c != 0) {
-        if (input_handler != 0) {
-            input_handler(c);
-        } else {
-            terminal_putchar(c);
-        }
+        key_queue_push(c);
     }
 }
 
