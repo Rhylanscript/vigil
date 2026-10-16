@@ -9,6 +9,7 @@
 #include "fs.h"
 #include "timer.h"
 #include "heap.h"
+#include "launcher.h"
 
 #define INPUT_BUFFER_SIZE 128
 #define HISTORY_SIZE 8
@@ -126,6 +127,7 @@ static void execute_command(char* line) {
         terminal_print("        under <name>\n");
         terminal_print("    read <name>:            Show contents of file <name>\n");
         terminal_print("    forget <name>:          Removes file <name>\n");
+        terminal_print("    edit <path>:            Open a file in Notepad\n");
         terminal_print("    folder <path>:          Create a folder\n");
         terminal_print("    rename <path> <name>:   Rename a file or folder\n");
         terminal_print("    files [folder]:         Show what is in a folder\n\n");
@@ -234,6 +236,17 @@ static void execute_command(char* line) {
         } else {
             terminal_print("File not found\n");
         }
+        return;
+    }
+
+    if (kstrcmp(command, "edit") == 0) {
+        if (kstrcmp(args, "") == 0) {
+            terminal_print("Usage: edit <path>\n");
+            return;
+        }
+
+        launcher_open_file(args);
+        terminal_print("Opening in Notepad...\n");
         return;
     }
 

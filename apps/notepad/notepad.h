@@ -7,6 +7,8 @@
 void notepad_start(void);
 void notepad_redraw(void);
 
+int notepad_open(const char* path);
+
 void notepad_handle_char(char c);
 void notepad_handle_click(int32_t x, int32_t y);
 

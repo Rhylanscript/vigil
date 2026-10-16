@@ -12,6 +12,7 @@
 #include "title_bar.h"
 #include "taskbar.h"
 #include "menu.h"
+#include "fs.h"
 
 #include "shell.h"
 #include "notepad.h"
@@ -199,6 +200,61 @@ static void switch_to_app(int index) {
     launch_app(index);
 }
 
+// --- opening files in notepad ---
+
+static char pending_open_path[FS_MAX_PATH];
+static int open_pending = 0;
+
+static int find_app_index(const char* name) {
+    for (int i = 0; i < APP_COUNT; i++) {
+        if (kstrcmp(apps[i].name, name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void bring_to_front(int index) {
+    const app_t* current = running_app;
+
+    if (current != 0) {
+        int current_index = app_index(current);
+        if (current_index == index) {
+            return;
+        }
+        app_state[current_index] = APP_STATE_MINIMIZED;
+        running_app = 0;
+    }
+
+    launch_app(index);
+}
+
+static void process_pending_open(void) {
+    if (!open_pending) {
+        return;
+    }
+    open_pending = 0;
+
+    int index = find_app_index("Notepad");
+    if (index < 0) {
+        return;
+    }
+
+    bring_to_front(index);
+    notepad_open(pending_open_path);
+}
+
+void launcher_open_file(const char* path) {
+    int i = 0;
+    while (path[i] != '\0' && i < FS_MAX_PATH - 1) {
+        pending_open_path[i] = path[i];
+        i++;
+    }
+    pending_open_path[i] = '\0';
+
+    open_pending = 1;
+}
+
 // --- context menu ---
 
 static void redraw_running_app(void) {
@@ -286,6 +342,7 @@ void launcher_init(void) {
 
 void launcher_update(void) {
     drain_key_queue();
+    process_pending_open();
 
     int clicked = mouse_left_clicked();
     int right_clicked = mouse_right_clicked();
