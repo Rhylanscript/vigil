@@ -11,6 +11,7 @@
 #include "terminal.h"
 #include "title_bar.h"
 #include "taskbar.h"
+#include "menu.h"
 
 #include "shell.h"
 #include "notepad.h"
@@ -136,6 +137,7 @@ static void draw_home_screen(void) {
 
 static void show_home_screen(void) {
     running_app = 0;
+    menu_close();
     mouse_left_clicked();
     draw_home_screen();
 }
@@ -197,12 +199,47 @@ static void switch_to_app(int index) {
     launch_app(index);
 }
 
+// --- context menu ---
+
+static void redraw_running_app(void) {
+    const app_t* app = running_app;
+
+    if (app != 0 && app->redraw != 0) {
+        app->redraw();
+    }
+}
+
+static void dismiss_menu(void) {
+    mouse_hide_cursor();
+    menu_close();
+    redraw_running_app();
+}
+
+static void handle_menu_click(int32_t x, int32_t y) {
+    mouse_hide_cursor();
+
+    int pick = menu_click(x, y);
+    redraw_running_app();
+
+    const app_t* app = running_app;
+    if (pick != MENU_NO_PICK && app != 0 && app->on_menu_pick != 0) {
+        app->on_menu_pick(pick);
+    }
+}
+
 // --- keyboard ---
 
 static void launcher_handle_key(char c) {
     const app_t* app = running_app;
 
     if (app == 0) {
+        return;
+    }
+
+    if (menu_is_open()) {
+        if (c == KEY_ESCAPE) {
+            dismiss_menu();
+        }
         return;
     }
 
@@ -254,6 +291,15 @@ void launcher_update(void) {
     int right_clicked = mouse_right_clicked();
     int32_t mouse_x = mouse_get_x();
     int32_t mouse_y = mouse_get_y();
+
+    if (menu_is_open()) {
+        if (clicked) {
+            handle_menu_click(mouse_x, mouse_y);
+        } else if (right_clicked) {
+            dismiss_menu();
+        }
+        return;
+    }
 
     if (clicked) {
         int slot = taskbar_hit_test(mouse_x, mouse_y);
