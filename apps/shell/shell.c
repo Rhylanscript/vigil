@@ -126,7 +126,9 @@ static void execute_command(char* line) {
         terminal_print("        under <name>\n");
         terminal_print("    read <name>:            Show contents of file <name>\n");
         terminal_print("    forget <name>:          Removes file <name>\n");
-        terminal_print("    files:                  Show files in memory\n\n");
+        terminal_print("    folder <path>:          Create a folder\n");
+        terminal_print("    rename <path> <name>:   Rename a file or folder\n");
+        terminal_print("    files [folder]:         Show what is in a folder\n\n");
 
         return;
     }
@@ -187,10 +189,14 @@ static void execute_command(char* line) {
         }
 
         int result = fs_write_file(filename, (const uint8_t*) filedata, (uint32_t) len);
-        if (result == 0) {
+        if (result == FS_OK) {
             terminal_print("Saved\n");
-        } else {
+        } else if (result == FS_ERR_FULL) {
             terminal_print("Write failed - file table full.\n");
+        } else if (result == FS_ERR_IS_DIR) {
+            terminal_print("Write failed - that name is a folder.\n");
+        } else {
+            terminal_print("Write failed - bad path, long name or missing folder.\n");
         }
         return;
     }
@@ -200,10 +206,12 @@ static void execute_command(char* line) {
         static char buffer[512];
         uint32_t out_size = 0;
         int result = fs_read_file(filename, (uint8_t*) buffer, sizeof(buffer) - 1, &out_size);
-        if (result == -1) {
+        if (result == FS_ERR_NOT_FOUND) {
             terminal_print("File not found\n");
-        } else if (result == -2) {
+        } else if (result == FS_ERR_TOO_BIG) {
             terminal_print("File too large to read\n");
+        } else if (result != FS_OK) {
+            terminal_print("Cannot read that (is it a folder?)\n");
         } else {
             buffer[out_size] = '\0';
             terminal_print(buffer);
@@ -219,26 +227,84 @@ static void execute_command(char* line) {
         }
 
         int result = fs_delete_file(args);
-        if (result == 0) {
+        if (result == FS_OK) {
             terminal_print("Forgotten\n");
+        } else if (result == FS_ERR_NOT_EMPTY) {
+            terminal_print("Folder is not empty\n");
         } else {
             terminal_print("File not found\n");
         }
         return;
     }
 
-    if (kstrcmp(command, "files") == 0) {
-        char names[FS_MAX_FILES][FS_MAX_NAME_LEN];
-        uint32_t sizes[FS_MAX_FILES];
-        int count = fs_list_files(names, sizes);
+    if (kstrcmp(command, "folder") == 0) {
+        if (kstrcmp(args, "") == 0) {
+            terminal_print("Usage: folder <path>\n");
+            return;
+        }
 
+        int result = fs_make_folder(args);
+        if (result == FS_OK) {
+            terminal_print("Folder created\n");
+        } else if (result == FS_ERR_EXISTS) {
+            terminal_print("Something with that name already exists\n");
+        } else if (result == FS_ERR_FULL) {
+            terminal_print("Cannot create folder - file table full.\n");
+        } else {
+            terminal_print("Cannot create folder - bad path, long name or missing folder.\n");
+        }
+        return;
+    }
+
+    if (kstrcmp(command, "rename") == 0) {
+        int j = 0;
+        while (args[j] != '\0' && args[j] != ' ') {
+            j++;
+        }
+
+        if (args[j] != ' ') {
+            terminal_print("Usage: rename <path> <name>\n");
+            return;
+        }
+        args[j] = '\0';
+        char* old_path = args;
+        char* new_name = &args[j + 1];
+        while (*new_name == ' ') {
+            new_name++;
+        }
+
+        int result = fs_rename(old_path, new_name);
+        if (result == FS_OK) {
+            terminal_print("Renamed\n");
+        } else if (result == FS_ERR_NOT_FOUND) {
+            terminal_print("File not found\n");
+        } else if (result == FS_ERR_EXISTS) {
+            terminal_print("Something with that name already exists\n");
+        } else {
+            terminal_print("Bad name (1-15 characters, no '/')\n");
+        }
+        return;
+    }
+
+    if (kstrcmp(command, "files") == 0) {
+        fs_info_t entries[FS_MAX_FILES];
+        int count = fs_list_dir(args, entries);
+
+        if (count < 0) {
+            terminal_print("No such folder\n");
+            return;
+        }
         if (count == 0) {
             terminal_print("No files\n");
             return;
         }
 
         for (int i = 0; i < count; i++) {
-            kprintf("%s (%d bytes)\n", names[i], sizes[i]);
+            if (entries[i].is_dir) {
+                kprintf("%s/ (folder)\n", entries[i].name);
+            } else {
+                kprintf("%s (%d bytes)\n", entries[i].name, entries[i].size_bytes);
+            }
         }
         return;
     }
