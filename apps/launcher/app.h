@@ -15,6 +15,8 @@ typedef struct {
 
     void (*on_click)(int32_t x, int32_t y);
     void (*on_right_click)(int32_t x, int32_t y);
+    
+    void (*on_menu_pick)(int index);
 } app_t;
 
 #endif
