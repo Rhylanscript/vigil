@@ -14,6 +14,7 @@ typedef struct {
     void (*on_tick)(void);
 
     void (*on_click)(int32_t x, int32_t y);
+    void (*on_right_click)(int32_t x, int32_t y);
 } app_t;
 
 #endif

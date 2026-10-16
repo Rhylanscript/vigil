@@ -41,8 +41,8 @@ static void start_terminal(void) {
 }
 
 static const app_t apps[] = {
-    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0 },
-    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click },
+    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0 },
+    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0 },
 };
 
 #define APP_COUNT ((int) (sizeof(apps) / sizeof(apps[0])))
@@ -251,6 +251,7 @@ void launcher_update(void) {
     drain_key_queue();
 
     int clicked = mouse_left_clicked();
+    int right_clicked = mouse_right_clicked();
     int32_t mouse_x = mouse_get_x();
     int32_t mouse_y = mouse_get_y();
 
@@ -279,6 +280,13 @@ void launcher_update(void) {
             if (app->on_click != 0 && click_is_in_app_band(mouse_y)) {
                 mouse_hide_cursor();
                 app->on_click(mouse_x, mouse_y);
+            }
+        }
+
+        if (right_clicked) {
+            if (app->on_right_click != 0 && click_is_in_app_band(mouse_y)) {
+                mouse_hide_cursor();
+                app->on_right_click(mouse_x, mouse_y);
             }
         }
 
