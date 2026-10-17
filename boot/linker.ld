@@ -33,6 +33,7 @@ SECTIONS
         build/launcher.o(.text)
         build/notepad.o(.text)
         build/menu.o(.text)
+        build/files.o(.text)
     }
 
     .rodata : {
@@ -64,6 +65,7 @@ SECTIONS
         build/launcher.o(.rodata)
         build/notepad.o(.rodata)
         build/menu.o(.rodata)
+        build/files.o(.rodata)
     }
 
     .data : {
@@ -95,6 +97,7 @@ SECTIONS
         build/launcher.o(.data)
         build/notepad.o(.data)
         build/menu.o(.data)
+        build/files.o(.data)
     }
 
     .bss : {
@@ -127,6 +130,7 @@ SECTIONS
         build/launcher.o(.bss)
         build/notepad.o(.bss)
         build/menu.o(.bss)
+        build/files.o(.bss)
         __bss_end = .;
     }
 }
