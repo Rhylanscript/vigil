@@ -13,6 +13,7 @@
 #include "taskbar.h"
 #include "menu.h"
 #include "fs.h"
+#include "prompt.h"
 
 #include "shell.h"
 #include "notepad.h"
@@ -44,9 +45,9 @@ static void start_terminal(void) {
 }
 
 static const app_t apps[] = {
-    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0 },
-    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0 },
-    { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick },
+    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0, 0 },
+    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0 },
+    { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick, 0 },
 };
 
 #define APP_COUNT ((int) (sizeof(apps) / sizeof(apps[0])))
@@ -141,6 +142,7 @@ static void draw_home_screen(void) {
 static void show_home_screen(void) {
     running_app = 0;
     menu_close();
+    prompt_close();
     mouse_left_clicked();
     draw_home_screen();
 }
@@ -285,12 +287,34 @@ static void handle_menu_click(int32_t x, int32_t y) {
     }
 }
 
+// --- name prompt ---
+
+static void handle_prompt_key(char c) {
+    mouse_hide_cursor();
+
+    prompt_result_t result = prompt_handle_key(c);
+    if (result == PROMPT_CONTINUE) {
+        return;
+    }
+
+    redraw_running_app();
+    const app_t* app = running_app;
+    if (result == PROMPT_ACCEPTED && app != 0 && app->on_prompt_done != 0) {
+        app->on_prompt_done(prompt_text());
+    }
+}
+
 // --- keyboard ---
 
 static void launcher_handle_key(char c) {
     const app_t* app = running_app;
 
     if (app == 0) {
+        return;
+    }
+    
+    if (prompt_is_open()) {
+        handle_prompt_key(c);
         return;
     }
 
@@ -350,6 +374,10 @@ void launcher_update(void) {
     int right_clicked = mouse_right_clicked();
     int32_t mouse_x = mouse_get_x();
     int32_t mouse_y = mouse_get_y();
+
+    if (prompt_is_open()) {
+        return;
+    }
 
     if (menu_is_open()) {
         if (clicked) {
