@@ -34,6 +34,7 @@ SECTIONS
         build/notepad.o(.text)
         build/menu.o(.text)
         build/files.o(.text)
+        build/prompt.o(.text)
     }
 
     .rodata : {
@@ -66,6 +67,7 @@ SECTIONS
         build/notepad.o(.rodata)
         build/menu.o(.rodata)
         build/files.o(.rodata)
+        build/prompt.o(.rodata)
     }
 
     .data : {
@@ -98,6 +100,7 @@ SECTIONS
         build/notepad.o(.data)
         build/menu.o(.data)
         build/files.o(.data)
+        build/prompt.o(.data)
     }
 
     .bss : {
@@ -131,6 +134,7 @@ SECTIONS
         build/notepad.o(.bss)
         build/menu.o(.bss)
         build/files.o(.bss)
+        build/prompt.o(.bss)
         __bss_end = .;
     }
 }
