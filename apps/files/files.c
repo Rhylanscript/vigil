@@ -9,6 +9,7 @@
 #include "title_bar.h"
 #include "taskbar.h"
 #include "launcher.h"
+#include "prompt.h"
 
 // --- layout (pixels) ---
 
@@ -38,6 +39,7 @@
 
 typedef enum {
     ACTION_OPEN = 0,
+    ACTION_RENAME,
     ACTION_FORGET,
     ACTION_PROPERTIES,
     ACTION_COUNT
@@ -45,6 +47,7 @@ typedef enum {
 
 static const char* const menu_labels[ACTION_COUNT] = {
     "Open",
+    "Rename",
     "Forget",
     "Properties"
 };
@@ -59,7 +62,15 @@ static int entry_count = 0;
 static char message[MESSAGE_MAX];
 
 static char target_path[FS_MAX_PATH];
+static char target_name[FS_MAX_NAME_LEN];
 static int target_is_dir = 0;
+
+typedef enum {
+    PURPOSE_NONE = 0,
+    PURPOSE_RENAME
+} prompt_purpose_t;
+
+static prompt_purpose_t prompt_purpose = PURPOSE_NONE;
 
 // --- small text helpers ---
 
@@ -311,6 +322,46 @@ static void forget_target(void) {
     paint();
 }
 
+// opens the prompt, filled in with the item's current name
+static void start_rename(void) {
+    char title[48];
+    int pos = 0;
+    title[0] = '\0';
+    append(title, &pos, (int) sizeof(title), "Rename ");
+    append(title, &pos, (int) sizeof(title), target_name);
+    append(title, &pos, (int) sizeof(title), " to:");
+
+    prompt_purpose = PURPOSE_RENAME;
+
+    // longest allowed name is FS_MAX_NAME_LEN - 1 (one slot is for the
+    // end-of-string marker), and "/" can't be typed because a name
+    // can't contain one
+    prompt_open(title, target_name, FS_MAX_NAME_LEN - 1, "/");
+}
+
+static void finish_rename(const char* new_name) {
+    if (kstrcmp(new_name, target_name) == 0) {
+        set_message("name unchanged");
+    } else {
+        int result = fs_rename(target_path, new_name);
+
+        if (result == FS_OK) {
+            set_message("renamed");
+        } else if (result == FS_ERR_EXISTS) {
+            set_message("something with that name already exists in this folder");
+        } else if (result == FS_ERR_BAD_PATH) {
+            set_message("that is not a valid name");
+        } else if (result == FS_ERR_NOT_FOUND) {
+            set_message("it no longer exists");
+        } else {
+            set_message("could not rename it");
+        }
+    }
+
+    refresh_list();
+    paint();
+}
+
 static void show_properties(void) {
     int pos = 0;
     char number[12];
@@ -409,15 +460,29 @@ void files_handle_right_click(int32_t x, int32_t y) {
     }
     target_is_dir = entries[entry].is_dir;
 
+    int name_pos = 0;
+    target_name[0] = '\0';
+    append(target_name, &name_pos, FS_MAX_NAME_LEN, entries[entry].name);
+
     menu_open(x, y, menu_labels, ACTION_COUNT);
 }
 
 void files_handle_menu_pick(int index) {
     if (index == ACTION_OPEN) {
         open_path(target_path, target_is_dir);
+    } else if (index == ACTION_RENAME) {
+        start_rename();
     } else if (index == ACTION_FORGET) {
         forget_target();
     } else if (index == ACTION_PROPERTIES) {
         show_properties();
     }
+}
+
+void files_handle_prompt_done(const char* text) {
+    if (prompt_purpose == PURPOSE_RENAME) {
+        finish_rename(text);
+    }
+
+    prompt_purpose = PURPOSE_NONE;
 }

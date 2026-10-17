@@ -47,7 +47,7 @@ static void start_terminal(void) {
 static const app_t apps[] = {
     { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0, 0 },
     { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0 },
-    { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick, 0 },
+    { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick, files_handle_prompt_done },
 };
 
 #define APP_COUNT ((int) (sizeof(apps) / sizeof(apps[0])))
