@@ -6,9 +6,14 @@
 
 void files_start(void);
 void files_redraw(void);
+
 void files_handle_char(char c);
+
 void files_handle_click(int32_t x, int32_t y);
 void files_handle_right_click(int32_t x, int32_t y);
+
 void files_handle_menu_pick(int index);
+
+void files_handle_prompt_done(const char* text);
 
 #endif
