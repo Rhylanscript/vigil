@@ -38,6 +38,22 @@
 // --- the right-click menu ---
 
 typedef enum {
+    MENU_KIND_ITEM = 0,
+    MENU_KIND_BACKGROUND
+} menu_kind_t;
+
+typedef enum {
+    NEW_FOLDER = 0,
+    NEW_FILE,
+    NEW_ACTION_COUNT
+} new_action_t;
+
+static const char* const new_menu_labels[NEW_ACTION_COUNT] = {
+    "New folder",
+    "New file"
+};
+
+typedef enum {
     ACTION_OPEN = 0,
     ACTION_RENAME,
     ACTION_FORGET,
@@ -67,10 +83,14 @@ static int target_is_dir = 0;
 
 typedef enum {
     PURPOSE_NONE = 0,
-    PURPOSE_RENAME
+    PURPOSE_RENAME,
+    PURPOSE_NEW_FOLDER,
+    PURPOSE_NEW_FILE
 } prompt_purpose_t;
 
 static prompt_purpose_t prompt_purpose = PURPOSE_NONE;
+
+static menu_kind_t active_menu = MENU_KIND_ITEM;
 
 // --- small text helpers ---
 
@@ -261,6 +281,10 @@ static void paint(void) {
         draw_row(row);
     }
 
+    if (row_count() == 0) {
+        gfx_draw_string(TEXT_X, list_top() + 6, "(this folder is empty - right-click here to add something)", GFX_WHITE);
+    }
+
     draw_footer();
 }
 
@@ -322,7 +346,49 @@ static void forget_target(void) {
     paint();
 }
 
-// opens the prompt, filled in with the item's current name
+static void start_new_item(prompt_purpose_t purpose) {
+    prompt_purpose = purpose;
+
+    const char* title = (purpose == PURPOSE_NEW_FOLDER) ? "New folder name:" : "New file name:";
+    prompt_open(title, "", FS_MAX_NAME_LEN - 1, "/");
+}
+
+static void finish_new_item(const char* name, int is_folder) {
+    char path[FS_MAX_PATH];
+
+    if (!child_path(name, path)) {
+        set_message("that path is too long to create");
+    } else {
+        int result;
+
+        if (is_folder) {
+            result = fs_make_folder(path);
+        } else {
+            fs_info_t existing;
+            if (fs_stat(path, &existing) == FS_OK) {
+                result = FS_ERR_EXISTS;
+            } else {
+                result = fs_write_file(path, (const uint8_t*) "", 0);
+            }
+        }
+
+        if (result == FS_OK) {
+            set_message(is_folder ? "folder created" : "file created");
+        } else if (result == FS_ERR_EXISTS) {
+            set_message("something with that name already exists in this folder");
+        } else if (result == FS_ERR_FULL) {
+            set_message("cannot create - the file table is full (32 items)");
+        } else if (result == FS_ERR_BAD_PATH) {
+            set_message("that is not a valid name");
+        } else {
+            set_message("could not create it");
+        }
+    }
+
+    refresh_list();
+    paint();
+}
+
 static void start_rename(void) {
     char title[48];
     int pos = 0;
@@ -333,9 +399,6 @@ static void start_rename(void) {
 
     prompt_purpose = PURPOSE_RENAME;
 
-    // longest allowed name is FS_MAX_NAME_LEN - 1 (one slot is for the
-    // end-of-string marker), and "/" can't be typed because a name
-    // can't contain one
     prompt_open(title, target_name, FS_MAX_NAME_LEN - 1, "/");
 }
 
@@ -445,6 +508,10 @@ void files_handle_click(int32_t x, int32_t y) {
 void files_handle_right_click(int32_t x, int32_t y) {
     int row = row_at(y);
     if (row < 0) {
+        if (y >= (int32_t) list_top() && y < (int32_t) footer_y()) {
+            active_menu = MENU_KIND_BACKGROUND;
+            menu_open(x, y, new_menu_labels, NEW_ACTION_COUNT);
+        }
         return;
     }
 
@@ -464,10 +531,20 @@ void files_handle_right_click(int32_t x, int32_t y) {
     target_name[0] = '\0';
     append(target_name, &name_pos, FS_MAX_NAME_LEN, entries[entry].name);
 
+    active_menu = MENU_KIND_ITEM;
     menu_open(x, y, menu_labels, ACTION_COUNT);
 }
 
 void files_handle_menu_pick(int index) {
+    if (active_menu == MENU_KIND_BACKGROUND) {
+        if (index == NEW_FOLDER) {
+            start_new_item(PURPOSE_NEW_FOLDER);
+        } else if (index == NEW_FILE) {
+            start_new_item(PURPOSE_NEW_FILE);
+        }
+        return;
+    }
+
     if (index == ACTION_OPEN) {
         open_path(target_path, target_is_dir);
     } else if (index == ACTION_RENAME) {
@@ -482,6 +559,10 @@ void files_handle_menu_pick(int index) {
 void files_handle_prompt_done(const char* text) {
     if (prompt_purpose == PURPOSE_RENAME) {
         finish_rename(text);
+    } else if (prompt_purpose == PURPOSE_NEW_FOLDER) {
+        finish_new_item(text, 1);
+    } else if (prompt_purpose == PURPOSE_NEW_FILE) {
+        finish_new_item(text, 0);
     }
 
     prompt_purpose = PURPOSE_NONE;
