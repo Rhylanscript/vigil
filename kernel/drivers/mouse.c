@@ -77,6 +77,7 @@ static int32_t cursor_y;
 static uint8_t button_state;
 
 static volatile int left_click_pending = 0;
+static volatile int right_click_pending = 0;
 
 static void process_packet(void) {
     uint8_t flags = packet[0];
@@ -91,6 +92,9 @@ static void process_packet(void) {
 
     if (!(previous_buttons & 0x01) && (button_state & 0x01)) {
         left_click_pending = 1;
+    }
+    if (!(previous_buttons & 0x02) && (button_state & 0x02)) {
+        right_click_pending = 1;
     }
 
     int32_t dx = packet[1];
@@ -218,5 +222,11 @@ int mouse_middle_button(void) { return button_state & 0x04; }
 int mouse_left_clicked(void) {
     int clicked = left_click_pending;
     left_click_pending = 0;
+    return clicked;
+}
+
+int mouse_right_clicked(void) {
+    int clicked = right_click_pending;
+    right_click_pending = 0;
     return clicked;
 }

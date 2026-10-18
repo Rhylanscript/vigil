@@ -10,7 +10,7 @@ if not exist "build" (
     echo.
 )
 
-set CFLAGS=-ffreestanding -Ikernel/cpu -Ikernel/drivers -Iapps/shell -Ikernel/lib -Ikernel/vigil -Ikernel/fs -Ikernel/mem -Ikernel/ui -Iapps/launcher -Iapps/notepad
+set CFLAGS=-ffreestanding -Ikernel/cpu -Ikernel/drivers -Iapps/shell -Ikernel/lib -Ikernel/vigil -Ikernel/fs -Ikernel/mem -Ikernel/ui -Iapps/launcher -Iapps/notepad -Iapps/files
 
 :: kernel objs
 
@@ -134,6 +134,14 @@ echo Compiling button.c...
 i686-elf-gcc %CFLAGS% -c kernel/ui/button.c -o build/button.o
 if errorlevel 1 goto :error
 
+echo Compiling menu.c...
+i686-elf-gcc %CFLAGS% -c kernel/ui/menu.c -o build/menu.o
+if errorlevel 1 goto :error
+
+echo Compiling prompt.c...
+i686-elf-gcc %CFLAGS% -c kernel/ui/prompt.c -o build/prompt.o
+if errorlevel 1 goto :error
+
 echo Compiling title_bar.c...
 i686-elf-gcc %CFLAGS% -c kernel/ui/title_bar.c -o build/title_bar.o
 if errorlevel 1 goto :error
@@ -159,6 +167,10 @@ echo Compiling Notepad...
 i686-elf-gcc %CFLAGS% -c apps/notepad/notepad.c -o build/notepad.o
 if errorlevel 1 goto :error
 
+echo Compiling Files...
+i686-elf-gcc %CFLAGS% -c apps/files/files.c -o build/files.o
+if errorlevel 1 goto :error
+
 echo.
 echo Building img build...
 echo ====================================
@@ -167,7 +179,7 @@ echo.
 :: link build files using linker script
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o build/menu.o build/files.o build/prompt.o
 if errorlevel 1 goto :error
 echo.
 

@@ -13,14 +13,14 @@
 // --- settings ---
 
 #define NOTEPAD_MAX_BYTES   2048
-#define NOTEPAD_FILE_NAME   "notes"
+#define NOTEPAD_DEFAULT_FILE "notes"
 
 #define NOTEPAD_TOP         TITLE_BAR_HEIGHT
 #define NOTEPAD_BOTTOM      TASKBAR_HEIGHT
 
 #define STATUS_ROWS         1
 #define STATUS_TEXT_X       8
-#define STATUS_LINE_MAX     96
+#define STATUS_LINE_MAX     120
 
 #define NOTE_FG             GFX_WHITE
 #define NOTE_BG             GFX_BLACK
@@ -52,6 +52,13 @@ static int cursor_blink_on;
 static uint32_t last_blink_tick;
 
 static const char* status_note = "";
+
+static char file_path[FS_MAX_PATH];
+
+static int dirty = 0;
+static int save_allowed = 1;
+
+static char incoming[NOTEPAD_MAX_BYTES];
 
 static char shown[NOTEPAD_MAX_ROWS][NOTEPAD_MAX_COLS];
 static char wanted[NOTEPAD_MAX_ROWS][NOTEPAD_MAX_COLS];
@@ -107,16 +114,20 @@ static void advance(char c, int* row, int* col) {
     }
 }
 
-static void find_cell(int count, int* out_row, int* out_col) {
+static void find_cell_in(const char* buffer, int count, int* out_row, int* out_col) {
     int row = 0;
     int col = 0;
 
     for (int i = 0; i < count; i++) {
-        advance(text[i], &row, &col);
+        advance(buffer[i], &row, &col);
     }
 
     *out_row = row;
     *out_col = col;
+}
+
+static void find_cell(int count, int* out_row, int* out_col) {
+    find_cell_in(text, count, out_row, out_col);
 }
 
 static int last_text_row(void) {
@@ -126,8 +137,15 @@ static int last_text_row(void) {
     return row;
 }
 
+static int buffer_fits_on_screen(const char* buffer, int count) {
+    int row;
+    int col;
+    find_cell_in(buffer, count, &row, &col);
+    return row < visible_rows();
+}
+
 static int text_fits_on_screen(void) {
-    return last_text_row() < visible_rows();
+    return buffer_fits_on_screen(text, length);
 }
 
 static int index_at(int target_row, int target_col) {
@@ -201,7 +219,8 @@ static void draw_status(void) {
     int pos = 0;
     line[0] = '\0';
 
-    append_text(line, &pos, "Ctrl+S: save  |  ");
+    append_text(line, &pos, file_path);
+    append_text(line, &pos, "  |  Ctrl+S: save  |  ");
 
     kuitoa((uint32_t) length, number);
     append_text(line, &pos, number);
@@ -276,37 +295,72 @@ static void paint_screen(void) {
 
 // --- loading and saving ---
 
-static void load_note(void) {
-    uint32_t size = 0;
-    int result = fs_read_file(NOTEPAD_FILE_NAME, (uint8_t*) text, NOTEPAD_MAX_BYTES, &size);
-
-    if (result == 0) {
-        length = (int) size;
-        status_note = "loaded";
-    } else if (result == -2) {
-        length = 0;
-        status_note = "saved note too big to load";
-    } else {
-        length = 0;
-        status_note = "new note";
+static void set_file_path(const char* path) {
+    int i = 0;
+    while (path[i] != '\0' && i < FS_MAX_PATH - 1) {
+        file_path[i] = path[i];
+        i++;
     }
+    file_path[i] = '\0';
 }
 
-static void trim_to_screen(void) {
-    while (length > 0 && !text_fits_on_screen()) {
-        length--;
+static int load_file(const char* path) {
+    uint32_t size = 0;
+    int result = fs_read_file(path, (uint8_t*) incoming, NOTEPAD_MAX_BYTES, &size);
+
+    if (result == FS_ERR_NOT_FOUND) {
+        length = 0;
+        status_note = "new note";
+        return 1;
     }
+    if (result == FS_ERR_TOO_BIG) {
+        status_note = "file too big for Notepad";
+        return 0;
+    }
+    if (result == FS_ERR_IS_DIR) {
+        status_note = "that is a folder, not a file";
+        return 0;
+    }
+    if (result != FS_OK) {
+        status_note = "cannot open that file";
+        return 0;
+    }
+    if (!buffer_fits_on_screen(incoming, (int) size)) {
+        status_note = "file too long to fit on screen";
+        return 0;
+    }
+
+    for (uint32_t i = 0; i < size; i++) {
+        text[i] = incoming[i];
+    }
+    length = (int) size;
+    status_note = "loaded";
+    return 1;
 }
 
 static void save_note(void) {
-    int result = fs_write_file(NOTEPAD_FILE_NAME, (const uint8_t*) text, (uint32_t) length);
+    if (!save_allowed) {
+        status_note = "not saved - the file was never loaded";
+        draw_status();
+        return;
+    }
 
-    if (result == 0) {
+    int result = fs_write_file(file_path, (const uint8_t*) text, (uint32_t) length);
+
+    if (result == FS_OK) {
         status_note = "saved";
-    } else {
+        dirty = 0;
+    } else if (result == FS_ERR_FULL) {
         status_note = "save failed - file table full";
+    } else {
+        status_note = "save failed - bad path";
     }
     draw_status();
+}
+
+static void mark_dirty(void) {
+    dirty = 1;
+    status_note = "unsaved changes";
 }
 
 // --- editing the text array ---
@@ -356,7 +410,7 @@ static int insert_char(char c) {
     update_cursor_position();
     desired_col = cursor_col;
 
-    status_note = "unsaved changes";
+    mark_dirty();
     draw_status();
     show_cursor();
     return 1;
@@ -386,7 +440,7 @@ static void backspace(void) {
 
     refresh_text();
 
-    status_note = "unsaved changes";
+    mark_dirty();
     draw_status();
     show_cursor();
 }
@@ -402,7 +456,7 @@ static void delete_forward(void) {
     refresh_text();
     desired_col = cursor_col;
 
-    status_note = "unsaved changes";
+    mark_dirty();
     draw_status();
     show_cursor();
 }
@@ -458,8 +512,13 @@ static void move_down(void) {
 
 void notepad_start(void) {
     compute_layout();
-    load_note();
-    trim_to_screen();
+    set_file_path(NOTEPAD_DEFAULT_FILE);
+    dirty = 0;
+
+    save_allowed = load_file(file_path);
+    if (!save_allowed) {
+        length = 0;
+    }
 
     cursor_index = length;
     paint_screen();
@@ -469,6 +528,28 @@ void notepad_start(void) {
 void notepad_redraw(void) {
     compute_layout();
     paint_screen();
+}
+
+int notepad_open(const char* path) {
+    if (dirty) {
+        status_note = "unsaved changes - press Ctrl+S, then try again";
+        draw_status();
+        return 0;
+    }
+
+    if (!load_file(path)) {
+        draw_status();
+        return 0;
+    }
+
+    set_file_path(path);
+    dirty = 0;
+    save_allowed = 1;
+
+    cursor_index = length;
+    paint_screen();
+    desired_col = cursor_col;
+    return 1;
 }
 
 void notepad_handle_char(char c) {

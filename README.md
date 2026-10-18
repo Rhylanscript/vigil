@@ -18,23 +18,26 @@ VIGIL boots from its own two stage bootloader into a 32-bit graphical desktop wi
 
 Command line shell with an 8 entry command history (cycle using up & down arrows).
 
-| Command               | What it does                          |
-| --------------------- | ------------------------------------- |
-| `help`                | Lists all commands                    |
-| `erase`               | Clears the terminal screen            |
-| `recall <text>`       | Prints the given text                 |
-| `status`              | Shows a one line description of VIGIL |
-| `cycles`              | Shows how many times VIGIL has booted |
-| `uptime`              | Shows seconds elapsed since boot      |
-| `meminfo`             | Shows free and total heap memory      |
-| `write <name> <text>` | Saves text to a file                  |
-| `read <name>`         | Shows the contents of a file          |
-| `forget <name>`       | Deletes a file                        |
-| `files`               | Lists saved files and their sizes     |
+| Command                   | What it does                                                              |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `help`                    | Lists all commands and their usages                                       |
+| `erase`                   | Clears the terminal screen                                                |
+| `recall <text>`           | Prints the given text                                                     |
+| `status`                  | Shows a one line description of VIGIL                                     |
+| `cycles`                  | Shows how many times VIGIL has booted                                     |
+| `uptime`                  | Shows seconds elapsed since boot                                          |
+| `meminfo`                 | Shows free and total heap memory                                          |
+| `write <name> <text>`     | Saves `<text>` to a file under `<name>`                                   |
+| `read <name>`             | Shows the contents of file `<name>`                                       |
+| `forget <name>`           | Deletes file `<name>`                                                     |
+| `edit <name>`             | Opens file `<name>` in Notepad to edit                                    |
+| `folder <path>`           | Create a folder at `<path>`                                               |
+| `rename <path> <name>`    | Rename a file at `<path>` to `<name>`                                     |
+| `files [folder]`          | Lists saved files in specified folder. If left blank defaults to root dir |
 
 ### Notepad
 
-A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. `Ctrl+S` saves to a file named `notes`, which is loaded again next time the app opens. `notes` is limited to 2048 bytes.
+A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. Defaults to editing the file `/notes`. Using the `edit` command in shell allows editing of any file.
 
 ### Using apps
 
@@ -61,10 +64,17 @@ Click an app on the home screen to launch it. The `-` button (or the `Esc` key) 
 I work on VIGIL on windows (unfortunately). I have some helper batch scripts for executing simple actions for me, which need [NASM][nasm], the [i686-elf cross-compiler tools][elf-tools], and [QEMU][qemu].
 
 ```bash
-vigil build      # compile everything into dist/vigil.img
-vigil run        # boot it in QEMU
-vigil dev        # build, then run
-vigil clean      # wipe build output (keeps the saved storage disk)
+:: compile everything into dist/vigil.img
+vigil build
+
+:: boot it in QEMU (use --sdl)
+vigil run
+
+:: build, then run
+vigil dev
+
+:: wipe build output (keeps the saved storage disk)
+vigil clean
 ```
 
 Side note - I would PROBABLY recommend running the run command with `--sdl` as an arguement (but this isnt available for dev, so I kind of stopped using it... I should probably add that functionality for dev......)

@@ -11,9 +11,13 @@
 #include "terminal.h"
 #include "title_bar.h"
 #include "taskbar.h"
+#include "menu.h"
+#include "fs.h"
+#include "prompt.h"
 
 #include "shell.h"
 #include "notepad.h"
+#include "files.h"
 
 // --- home screen layout (px) ---
 
@@ -41,8 +45,9 @@ static void start_terminal(void) {
 }
 
 static const app_t apps[] = {
-    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0 },
-    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click },
+    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0, 0 },
+    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0 },
+    { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick, files_handle_prompt_done },
 };
 
 #define APP_COUNT ((int) (sizeof(apps) / sizeof(apps[0])))
@@ -136,6 +141,8 @@ static void draw_home_screen(void) {
 
 static void show_home_screen(void) {
     running_app = 0;
+    menu_close();
+    prompt_close();
     mouse_left_clicked();
     draw_home_screen();
 }
@@ -197,12 +204,124 @@ static void switch_to_app(int index) {
     launch_app(index);
 }
 
+// --- opening files in notepad ---
+
+static char pending_open_path[FS_MAX_PATH];
+static int open_pending = 0;
+
+static int find_app_index(const char* name) {
+    for (int i = 0; i < APP_COUNT; i++) {
+        if (kstrcmp(apps[i].name, name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void bring_to_front(int index) {
+    const app_t* current = running_app;
+
+    if (current != 0) {
+        int current_index = app_index(current);
+        if (current_index == index) {
+            return;
+        }
+        app_state[current_index] = APP_STATE_MINIMIZED;
+        running_app = 0;
+    }
+
+    launch_app(index);
+}
+
+static void process_pending_open(void) {
+    if (!open_pending) {
+        return;
+    }
+    open_pending = 0;
+
+    int index = find_app_index("Notepad");
+    if (index < 0) {
+        return;
+    }
+
+    bring_to_front(index);
+    notepad_open(pending_open_path);
+}
+
+void launcher_open_file(const char* path) {
+    int i = 0;
+    while (path[i] != '\0' && i < FS_MAX_PATH - 1) {
+        pending_open_path[i] = path[i];
+        i++;
+    }
+    pending_open_path[i] = '\0';
+
+    open_pending = 1;
+}
+
+// --- context menu ---
+
+static void redraw_running_app(void) {
+    const app_t* app = running_app;
+
+    if (app != 0 && app->redraw != 0) {
+        app->redraw();
+    }
+}
+
+static void dismiss_menu(void) {
+    mouse_hide_cursor();
+    menu_close();
+    redraw_running_app();
+}
+
+static void handle_menu_click(int32_t x, int32_t y) {
+    mouse_hide_cursor();
+
+    int pick = menu_click(x, y);
+    redraw_running_app();
+
+    const app_t* app = running_app;
+    if (pick != MENU_NO_PICK && app != 0 && app->on_menu_pick != 0) {
+        app->on_menu_pick(pick);
+    }
+}
+
+// --- name prompt ---
+
+static void handle_prompt_key(char c) {
+    mouse_hide_cursor();
+
+    prompt_result_t result = prompt_handle_key(c);
+    if (result == PROMPT_CONTINUE) {
+        return;
+    }
+
+    redraw_running_app();
+    const app_t* app = running_app;
+    if (result == PROMPT_ACCEPTED && app != 0 && app->on_prompt_done != 0) {
+        app->on_prompt_done(prompt_text());
+    }
+}
+
 // --- keyboard ---
 
 static void launcher_handle_key(char c) {
     const app_t* app = running_app;
 
     if (app == 0) {
+        return;
+    }
+    
+    if (prompt_is_open()) {
+        handle_prompt_key(c);
+        return;
+    }
+
+    if (menu_is_open()) {
+        if (c == KEY_ESCAPE) {
+            dismiss_menu();
+        }
         return;
     }
 
@@ -249,10 +368,25 @@ void launcher_init(void) {
 
 void launcher_update(void) {
     drain_key_queue();
+    process_pending_open();
 
     int clicked = mouse_left_clicked();
+    int right_clicked = mouse_right_clicked();
     int32_t mouse_x = mouse_get_x();
     int32_t mouse_y = mouse_get_y();
+
+    if (prompt_is_open()) {
+        return;
+    }
+
+    if (menu_is_open()) {
+        if (clicked) {
+            handle_menu_click(mouse_x, mouse_y);
+        } else if (right_clicked) {
+            dismiss_menu();
+        }
+        return;
+    }
 
     if (clicked) {
         int slot = taskbar_hit_test(mouse_x, mouse_y);
@@ -279,6 +413,13 @@ void launcher_update(void) {
             if (app->on_click != 0 && click_is_in_app_band(mouse_y)) {
                 mouse_hide_cursor();
                 app->on_click(mouse_x, mouse_y);
+            }
+        }
+
+        if (right_clicked) {
+            if (app->on_right_click != 0 && click_is_in_app_band(mouse_y)) {
+                mouse_hide_cursor();
+                app->on_right_click(mouse_x, mouse_y);
             }
         }
 

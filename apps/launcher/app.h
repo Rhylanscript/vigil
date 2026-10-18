@@ -14,6 +14,10 @@ typedef struct {
     void (*on_tick)(void);
 
     void (*on_click)(int32_t x, int32_t y);
+    void (*on_right_click)(int32_t x, int32_t y);
+    
+    void (*on_menu_pick)(int index);
+    void (*on_prompt_done)(const char* text);
 } app_t;
 
 #endif
