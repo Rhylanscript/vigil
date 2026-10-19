@@ -11,6 +11,7 @@
 #include "heap.h"
 #include "launcher.h"
 #include "api.h"
+#include "loader.h"
 
 #define INPUT_BUFFER_SIZE 128
 #define HISTORY_SIZE 8
@@ -131,8 +132,9 @@ static void execute_command(char* line) {
         terminal_print("    edit <path>:            Open a file in Notepad\n");
         terminal_print("    folder <path>:          Create a folder\n");
         terminal_print("    rename <path> <name>:   Rename a file or folder\n");
-        terminal_print("    files [folder]:         Show what is in a folder\n\n");
-        terminal_print("    api:                    Show info about the app API table\n\n");
+        terminal_print("    files [folder]:         Show what is in a folder\n");
+        terminal_print("    api:                    Show info about the app API table\n");
+        terminal_print("    loadapp <path>:         Load an app file from disk\n\n");
 
         return;
     }
@@ -330,6 +332,23 @@ static void execute_command(char* line) {
         kprintf("API version: %d, table size: %d bytes\n", api->version, api->struct_size);
         kprintf("kstrlen(\"vigil\") via table: %d\n", api->kstrlen("vigil"));
         kprintf("timer ticks via table: %d\n", api->timer_get_ticks());
+        return;
+    }
+
+    if (kstrcmp(command, "loadapp") == 0) {
+        if (kstrcmp(args, "") == 0) {
+            terminal_print("Usage: loadapp <path>\n");
+            return;
+        }
+
+        int result = loader_load(args);
+        if (result == LOADER_OK) {
+            terminal_print("App loaded - find it on the home screen\n");
+        } else {
+            terminal_print("Load failed: ");
+            terminal_print(loader_error_text(result));
+            terminal_print("\n");
+        }
         return;
     }
 

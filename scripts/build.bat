@@ -126,8 +126,14 @@ echo Compiling memory.c...
 i686-elf-gcc %CFLAGS% -c kernel/vigil/memory.c -o build/vigil_memory.o
 if errorlevel 1 goto :error
 
+:: app loader
+
 echo Compiling api.c...
 i686-elf-gcc %CFLAGS% -c kernel/vigil/api.c -o build/vigil_api.o
+if errorlevel 1 goto :error
+
+echo Compiling loader.c...
+i686-elf-gcc %CFLAGS% -c kernel/vigil/loader.c -o build/loader.o
 if errorlevel 1 goto :error
 
 echo.
@@ -179,16 +185,30 @@ echo Compiling Calculator...
 i686-elf-gcc %CFLAGS% -c apps/calculator/calc.c -o build/calc.o
 i686-elf-gcc %CFLAGS% -c apps/calculator/calculator.c -o build/calculator.o
 if errorlevel 1 goto :error
+echo.
+
+:: loadable apps (built separately from kernel then installed on disk)
+
+set APP_CFLAGS=-ffreestanding -fno-asynchronous-unwind-tables -Iapps/launcher -Ikernel/vigil -Ikernel/ui -Ikernel/drivers -Ikernel/fs -Ikernel/lib -Ikernel/mem
+
+echo Building loadable app: hello (slot 0 = 0x400000)...
+i686-elf-gcc %APP_CFLAGS% -c apps/hello/hello.c -o build/hello.o
+if errorlevel 1 goto :error
+i686-elf-ld -T apps/sdk/app.ld -Ttext=0x400000 -o build/hello.elf build/hello.o
+if errorlevel 1 goto :error
+i686-elf-objcopy -O binary build/hello.elf build/hello.vapp
+if errorlevel 1 goto :error
+echo.
+
+:: link build files using linker script
 
 echo.
 echo Building img build...
 echo ====================================
 echo.
 
-:: link build files using linker script
-
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o build/menu.o build/files.o build/prompt.o build/calc.o build/calculator.o build/vigil_api.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o build/menu.o build/files.o build/prompt.o build/calc.o build/calculator.o build/vigil_api.o build/loader.o
 if errorlevel 1 goto :error
 echo.
 
@@ -249,6 +269,16 @@ if not exist "dist\storage.img" (
 
 echo Building disk image...
 copy /b build\boot.bin+build\kernel_full.bin+build\padding.bin dist\vigil.img >nul
+echo.
+
+:: install apps onto disk
+
+echo Installing apps onto storage disk...
+python tools/install_app.py dist/storage.img build/hello.vapp apps/hello
+if errorlevel 1 goto :error
+echo.
+
+:: successful build
 
 echo Build Success^^! Check dist\vigil.img for output
 
