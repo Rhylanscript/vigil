@@ -16,7 +16,6 @@
 #include "prompt.h"
 #include "loader.h"
 #include "shell.h"
-#include "notepad.h"
 
 // --- home screen layout (px) ---
 
@@ -43,13 +42,8 @@ static void start_terminal(void) {
     shell_init();
 }
 
-static void open_in_notepad(const char* path) {
-    notepad_open(path);
-}
-
 static const app_t builtin_apps[] = {
-    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0, 0 },
-    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0, open_in_notepad },
+    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor },
 };
 
 #define BUILTIN_COUNT ((int) (sizeof(builtin_apps) / sizeof(builtin_apps[0])))
