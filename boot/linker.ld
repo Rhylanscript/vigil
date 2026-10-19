@@ -38,8 +38,6 @@ SECTIONS
         build/shell.o(.text)
         build/notepad.o(.text)
         build/files.o(.text)
-        build/calc.o(.text)
-        build/calculator.o(.text)
     }
 
     .rodata : {
@@ -76,8 +74,6 @@ SECTIONS
         build/shell.o(.rodata)
         build/notepad.o(.rodata)
         build/files.o(.rodata)
-        build/calc.o(.rodata)
-        build/calculator.o(.rodata)
     }
 
     .data : {
@@ -114,8 +110,6 @@ SECTIONS
         build/shell.o(.data)
         build/notepad.o(.data)
         build/files.o(.data)
-        build/calc.o(.data)
-        build/calculator.o(.data)
     }
 
     .bss : {
@@ -153,8 +147,6 @@ SECTIONS
         build/shell.o(.bss)
         build/notepad.o(.bss)
         build/files.o(.bss)
-        build/calc.o(.bss)
-        build/calculator.o(.bss)
         __bss_end = .;
     }
 }
