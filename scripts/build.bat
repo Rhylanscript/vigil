@@ -177,9 +177,6 @@ echo Compiling Notepad...
 i686-elf-gcc %CFLAGS% -c apps/notepad/notepad.c -o build/notepad.o
 if errorlevel 1 goto :error
 
-echo Compiling Files...
-i686-elf-gcc %CFLAGS% -c apps/files/files.c -o build/files.o
-if errorlevel 1 goto :error
 echo.
 
 :: loadable apps (built separately from kernel then installed on disk)
@@ -204,6 +201,14 @@ if errorlevel 1 goto :error
 i686-elf-objcopy -O binary build/calculator.elf build/calculator.vapp
 if errorlevel 1 goto :error
 
+echo Building app: files (slot 2 = 0x480000)...
+i686-elf-gcc %APP_CFLAGS% -c apps/files/files.c -o build/files_app.o
+if errorlevel 1 goto :error
+i686-elf-ld -T apps/sdk/app.ld -Ttext=0x480000 -o build/files.elf build/files_app.o
+if errorlevel 1 goto :error
+i686-elf-objcopy -O binary build/files.elf build/files.vapp
+if errorlevel 1 goto :error
+
 echo.
 
 :: link build files using linker script
@@ -214,7 +219,7 @@ echo ====================================
 echo.
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o build/menu.o build/files.o build/prompt.o build/vigil_api.o build/loader.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o build/menu.o build/prompt.o build/vigil_api.o build/loader.o
 if errorlevel 1 goto :error
 echo.
 
@@ -284,6 +289,7 @@ python tools/install_app.py dist/storage.img build/hello.vapp apps/hello
 if errorlevel 1 goto :error
 python tools/install_app.py dist/storage.img build/calculator.vapp apps/calculator
 if errorlevel 1 goto :error
+python tools/install_app.py dist/storage.img build/files.vapp apps/files
 echo.
 
 :: successful build
