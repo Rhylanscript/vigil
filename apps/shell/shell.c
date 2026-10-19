@@ -10,6 +10,7 @@
 #include "timer.h"
 #include "heap.h"
 #include "launcher.h"
+#include "api.h"
 
 #define INPUT_BUFFER_SIZE 128
 #define HISTORY_SIZE 8
@@ -131,6 +132,7 @@ static void execute_command(char* line) {
         terminal_print("    folder <path>:          Create a folder\n");
         terminal_print("    rename <path> <name>:   Rename a file or folder\n");
         terminal_print("    files [folder]:         Show what is in a folder\n\n");
+        terminal_print("    api:                    Show info about the app API table\n\n");
 
         return;
     }
@@ -319,6 +321,15 @@ static void execute_command(char* line) {
                 kprintf("%s (%d bytes)\n", entries[i].name, entries[i].size_bytes);
             }
         }
+        return;
+    }
+    
+    if (kstrcmp(command, "api") == 0) {
+        const vigil_api_t* api = api_get();
+
+        kprintf("API version: %d, table size: %d bytes\n", api->version, api->struct_size);
+        kprintf("kstrlen(\"vigil\") via table: %d\n", api->kstrlen("vigil"));
+        kprintf("timer ticks via table: %d\n", api->timer_get_ticks());
         return;
     }
 
