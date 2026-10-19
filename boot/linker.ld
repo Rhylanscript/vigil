@@ -35,6 +35,8 @@ SECTIONS
         build/menu.o(.text)
         build/files.o(.text)
         build/prompt.o(.text)
+        build/calc.o(.text)
+        build/calculator.o(.text)
     }
 
     .rodata : {
@@ -68,6 +70,8 @@ SECTIONS
         build/menu.o(.rodata)
         build/files.o(.rodata)
         build/prompt.o(.rodata)
+        build/calc.o(.rodata)
+        build/calculator.o(.rodata)
     }
 
     .data : {
@@ -101,6 +105,8 @@ SECTIONS
         build/menu.o(.data)
         build/files.o(.data)
         build/prompt.o(.data)
+        build/calc.o(.data)
+        build/calculator.o(.data)
     }
 
     .bss : {
@@ -135,6 +141,8 @@ SECTIONS
         build/menu.o(.bss)
         build/files.o(.bss)
         build/prompt.o(.bss)
+        build/calc.o(.bss)
+        build/calculator.o(.bss)
         __bss_end = .;
     }
 }

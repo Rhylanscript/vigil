@@ -39,6 +39,14 @@ Command line shell with an 8 entry command history (cycle using up & down arrows
 
 A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. Defaults to editing the file `/notes`. Using the `edit` command in shell allows editing of any file.
 
+### Files
+
+A simple file viewing app, where you can navigate the file tree. Clicking on a file will open it in notepad, clicking a folder will change the view to the contents of that folder. Files / Folders can be managed from the app, for example, right clicking a file will bring up options such as renaming, deleting, or seeing more information about it.
+
+### Calculator
+
+A simple calculator app with simple operations such as (`-`, `+`, `*`, `/`, & `%`). Each command is linked to a keypress.
+
 ### Using apps
 
 Click an app on the home screen to launch it. The `-` button (or the `Esc` key) minimizes an app and keeps it running in the taskbar whereas the `X` button closes it completely.
@@ -57,7 +65,7 @@ Click an app on the home screen to launch it. The `-` button (or the `Esc` key) 
 | Input         | PS/2 keyboard (Shift, Caps Lock, Ctrl, arrows) and PS/2 mouse         |
 | Memory        | First-fit heap allocator over a 1 MB pool                             |
 | Storage       | ATA PIO disk driver on a separate 10 MB virtual disk                  |
-| Filesystem    | Flat (no folders), up to 16 files, 16 char long names                 |
+| Filesystem    | Up to 16 files, 16 char long names, with nested folder structure      |
 
 ## Running it
 
