@@ -58,6 +58,9 @@ static char file_path[FS_MAX_PATH];
 static int dirty = 0;
 static int save_allowed = 1;
 
+static int file_on_disk = 0;
+static int recreate_armed = 0;
+
 static char incoming[NOTEPAD_MAX_BYTES];
 
 static char shown[NOTEPAD_MAX_ROWS][NOTEPAD_MAX_COLS];
@@ -304,6 +307,11 @@ static void set_file_path(const char* path) {
     file_path[i] = '\0';
 }
 
+static int file_still_exists(void) {
+    fs_info_t info;
+    return fs_stat(file_path, &info) == FS_OK;
+}
+
 static int load_file(const char* path) {
     uint32_t size = 0;
     int result = fs_read_file(path, (uint8_t*) incoming, NOTEPAD_MAX_BYTES, &size);
@@ -311,6 +319,7 @@ static int load_file(const char* path) {
     if (result == FS_ERR_NOT_FOUND) {
         length = 0;
         status_note = "new note";
+        file_on_disk = 0;
         return 1;
     }
     if (result == FS_ERR_TOO_BIG) {
@@ -335,6 +344,7 @@ static int load_file(const char* path) {
     }
     length = (int) size;
     status_note = "loaded";
+    file_on_disk = 1;
     return 1;
 }
 
@@ -345,11 +355,20 @@ static void save_note(void) {
         return;
     }
 
+    if (file_on_disk && !file_still_exists() && !recreate_armed) {
+        recreate_armed = 1;
+        status_note = "renamed or deleted - Ctrl+S again to save anyway";
+        draw_status();
+        return;
+    }
+    recreate_armed = 0;
+
     int result = fs_write_file(file_path, (const uint8_t*) text, (uint32_t) length);
 
     if (result == FS_OK) {
         status_note = "saved";
         dirty = 0;
+        file_on_disk = 1;
     } else if (result == FS_ERR_FULL) {
         status_note = "save failed - file table full";
     } else {
@@ -514,6 +533,7 @@ void notepad_start(void) {
     compute_layout();
     set_file_path(NOTEPAD_DEFAULT_FILE);
     dirty = 0;
+    recreate_armed = 0;
 
     save_allowed = load_file(file_path);
     if (!save_allowed) {
@@ -527,6 +547,11 @@ void notepad_start(void) {
 
 void notepad_redraw(void) {
     compute_layout();
+
+    if (file_on_disk && !file_still_exists()) {
+        status_note = "renamed or deleted - Ctrl+S twice to resave anyway";
+    }
+
     paint_screen();
 }
 
@@ -545,6 +570,7 @@ int notepad_open(const char* path) {
     set_file_path(path);
     dirty = 0;
     save_allowed = 1;
+    recreate_armed = 0;
 
     cursor_index = length;
     paint_screen();
