@@ -14,6 +14,7 @@
 #include "menu.h"
 #include "fs.h"
 #include "prompt.h"
+#include "loader.h"
 
 #include "shell.h"
 #include "notepad.h"
@@ -407,6 +408,7 @@ void launcher_init(void) {
         launcher_register_app(&builtin_apps[i]);
     }
 
+    loader_load_folder(LOADER_APP_FOLDER);
     show_home_screen();
 }
 
