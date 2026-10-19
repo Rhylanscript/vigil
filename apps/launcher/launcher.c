@@ -15,10 +15,8 @@
 #include "fs.h"
 #include "prompt.h"
 #include "loader.h"
-
 #include "shell.h"
 #include "notepad.h"
-#include "files.h"
 
 // --- home screen layout (px) ---
 
@@ -52,7 +50,6 @@ static void open_in_notepad(const char* path) {
 static const app_t builtin_apps[] = {
     { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0, 0 },
     { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0, open_in_notepad },
-    { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick, files_handle_prompt_done },
 };
 
 #define BUILTIN_COUNT ((int) (sizeof(builtin_apps) / sizeof(builtin_apps[0])))
