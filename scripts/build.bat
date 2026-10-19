@@ -126,6 +126,10 @@ echo Compiling memory.c...
 i686-elf-gcc %CFLAGS% -c kernel/vigil/memory.c -o build/vigil_memory.o
 if errorlevel 1 goto :error
 
+echo Compiling api.c...
+i686-elf-gcc %CFLAGS% -c kernel/vigil/api.c -o build/vigil_api.o
+if errorlevel 1 goto :error
+
 echo.
 
 :: UI elements
@@ -184,7 +188,7 @@ echo.
 :: link build files using linker script
 
 echo Linking kernel objects...
-i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o build/menu.o build/files.o build/prompt.o build/calc.o build/calculator.o
+i686-elf-ld -T boot/linker.ld -o build/kernel_full.elf build/stage2.o build/kernel.o build/terminal.o build/idt.o build/isr.o build/isr_asm.o build/idt_load.o build/pic.o build/irq.o build/irq_asm.o build/keyboard.o build/kstring.o build/kprintf.o build/shell.o build/ata.o build/vigil_memory.o build/fs.o build/timer.o build/heap.o build/font.o build/graphics.o build/mouse.o build/button.o build/title_bar.o build/taskbar.o build/launcher.o build/notepad.o build/menu.o build/files.o build/prompt.o build/calc.o build/calculator.o build/vigil_api.o
 if errorlevel 1 goto :error
 echo.
 
