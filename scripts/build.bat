@@ -296,6 +296,7 @@ if errorlevel 1 goto :error
 python tools/install_app.py dist/storage.img build/files.vapp apps/files
 if errorlevel 1 goto :error
 python tools/install_app.py dist/storage.img build/notepad.vapp apps/notepad
+if errorlevel 1 goto :error
 echo.
 
 :: successful build
