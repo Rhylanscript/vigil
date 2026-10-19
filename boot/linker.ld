@@ -32,6 +32,7 @@ SECTIONS
         build/menu.o(.text)
         build/prompt.o(.text)
         build/vigil_api.o(.text)
+        build/loader.o(.text)
         
         build/launcher.o(.text)
         build/shell.o(.text)
@@ -69,6 +70,7 @@ SECTIONS
         build/menu.o(.rodata)
         build/prompt.o(.rodata)
         build/vigil_api.o(.rodata)
+        build/loader.o(.rodata)
 
         build/launcher.o(.rodata)
         build/shell.o(.rodata)
@@ -106,6 +108,7 @@ SECTIONS
         build/menu.o(.data)
         build/prompt.o(.data)
         build/vigil_api.o(.data)
+        build/loader.o(.data)
 
         build/launcher.o(.data)
         build/shell.o(.data)
@@ -144,6 +147,7 @@ SECTIONS
         build/menu.o(.bss)
         build/prompt.o(.bss)
         build/vigil_api.o(.bss)
+        build/loader.o(.bss)
         
         build/launcher.o(.bss)
         build/shell.o(.bss)
