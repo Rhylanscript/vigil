@@ -45,16 +45,22 @@ static void start_terminal(void) {
     shell_init();
 }
 
-static const app_t apps[] = {
+static const app_t builtin_apps[] = {
     { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0, 0 },
     { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0 },
     { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick, files_handle_prompt_done },
     { "Calculator", calculator_start, calculator_redraw, calculator_handle_char, 0, calculator_handle_click, 0, 0, 0 },
 };
 
-#define APP_COUNT ((int) (sizeof(apps) / sizeof(apps[0])))
+#define BUILTIN_COUNT ((int) (sizeof(builtin_apps) / sizeof(builtin_apps[0])))
+#define MAX_APPS TASKBAR_MAX_ITEMS
 
-static button_t home_buttons[APP_COUNT];
+typedef char builtin_apps_must_fit[(BUILTIN_COUNT <= MAX_APPS) ? 1 : -1];
+
+static app_t apps[MAX_APPS];
+static int app_count = 0;
+
+static button_t home_buttons[MAX_APPS];
 
 // --- state ---
 
@@ -64,13 +70,13 @@ typedef enum {
     APP_STATE_MINIMIZED,
 } app_state_t;
 
-static app_state_t app_state[APP_COUNT];
+static app_state_t app_state[MAX_APPS];
 
 static const app_t* volatile running_app = 0;
 
-static char home_labels[APP_COUNT][HOME_LABEL_MAX];
+static char home_labels[MAX_APPS][HOME_LABEL_MAX];
 
-static int taskbar_slot_app[APP_COUNT];
+static int taskbar_slot_app[MAX_APPS];
 
 // --- helpers ---
 
@@ -98,6 +104,48 @@ static void build_home_label(int index) {
     out[pos] = '\0';
 }
 
+static void copy_app(app_t* dest, const app_t* src) {
+    dest->name = src->name;
+    dest->start = src->start;
+    dest->redraw = src->redraw;
+    dest->on_key = src->on_key;
+    dest->on_tick = src->on_tick;
+    dest->on_click = src->on_click;
+    dest->on_right_click = src->on_right_click;
+    dest->on_menu_pick = src->on_menu_pick;
+    dest->on_prompt_done = src->on_prompt_done;
+}
+
+static void place_home_button(int index) {
+    uint32_t button_x = 0;
+    if (gfx_screen_width() > HOME_BUTTON_WIDTH) {
+        button_x = (gfx_screen_width() - HOME_BUTTON_WIDTH) / 2;
+    }
+
+    home_buttons[index].x = button_x;
+    home_buttons[index].y = HOME_FIRST_BUTTON_Y + (uint32_t) index * (HOME_BUTTON_HEIGHT + HOME_BUTTON_GAP);
+    home_buttons[index].width = HOME_BUTTON_WIDTH;
+    home_buttons[index].height = HOME_BUTTON_HEIGHT;
+    home_buttons[index].label = home_labels[index];
+    home_buttons[index].color = HOME_BUTTON_COLOR;
+    home_buttons[index].on_click = 0;
+}
+
+int launcher_register_app(const app_t* app) {
+    if (app == 0 || app_count >= MAX_APPS) {
+        return -1;
+    }
+
+    int index = app_count;
+
+    copy_app(&apps[index], app);
+    app_state[index] = APP_STATE_STOPPED;
+    place_home_button(index);
+
+    app_count++;
+    return index;
+}
+
 // --- drawing ---
 
 static void draw_centered_string(uint32_t y, const char* text, gfx_color_t color) {
@@ -110,10 +158,10 @@ static void draw_centered_string(uint32_t y, const char* text, gfx_color_t color
 }
 
 static void draw_taskbar(void) {
-    taskbar_item_t items[APP_COUNT];
+    taskbar_item_t items[MAX_APPS];
     int count = 0;
 
-    for (int i = 0; i < APP_COUNT; i++) {
+    for (int i = 0; i < app_count; i++) {
         if (app_state[i] == APP_STATE_STOPPED) {
             continue;
         }
@@ -133,7 +181,7 @@ static void draw_home_screen(void) {
     draw_centered_string(HOME_TITLE_Y, HOME_TITLE, GFX_GREEN);
     draw_taskbar();
 
-    for (int i = 0; i < APP_COUNT; i++) {
+    for (int i = 0; i < app_count; i++) {
         build_home_label(i);
         button_draw(&home_buttons[i]);
     }
@@ -212,7 +260,7 @@ static char pending_open_path[FS_MAX_PATH];
 static int open_pending = 0;
 
 static int find_app_index(const char* name) {
-    for (int i = 0; i < APP_COUNT; i++) {
+    for (int i = 0; i < app_count; i++) {
         if (kstrcmp(apps[i].name, name) == 0) {
             return i;
         }
@@ -353,16 +401,10 @@ static int click_is_in_app_band(int32_t py) {
 }
 
 void launcher_init(void) {
-    uint32_t button_x = (gfx_screen_width() - HOME_BUTTON_WIDTH) / 2;
+    app_count = 0;
 
-    for (int i = 0; i < APP_COUNT; i++) {
-        home_buttons[i].x = button_x;
-        home_buttons[i].y = HOME_FIRST_BUTTON_Y + (uint32_t) i * (HOME_BUTTON_HEIGHT + HOME_BUTTON_GAP);
-        home_buttons[i].width = HOME_BUTTON_WIDTH;
-        home_buttons[i].height = HOME_BUTTON_HEIGHT;
-        home_buttons[i].label = home_labels[i];
-        home_buttons[i].color = HOME_BUTTON_COLOR;
-        home_buttons[i].on_click = 0;
+    for (int i = 0; i < BUILTIN_COUNT; i++) {
+        launcher_register_app(&builtin_apps[i]);
     }
 
     show_home_screen();
@@ -432,7 +474,7 @@ void launcher_update(void) {
     }
 
     if (clicked) {
-        int index = button_find_at(home_buttons, APP_COUNT, mouse_x, mouse_y);
+        int index = button_find_at(home_buttons, app_count, mouse_x, mouse_y);
         if (index >= 0) {
             launch_app(index);
         }
