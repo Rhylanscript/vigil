@@ -19,6 +19,9 @@
 #include "graphics.h"
 #include "button.h"
 #include "fs.h"
+#include "menu.h"
+#include "prompt.h"
+#include "launcher.h"
 
 // bumped whenever the table changes such that old apps cant gracefully handle
 #define VIGIL_API_VERSION 1
@@ -71,6 +74,15 @@ typedef struct {
     // --- heap ---
     void*       (*kmalloc)(size_t size);
     void        (*kfree)(void* ptr);
+
+    // --- menu (right-click popup) ---
+    void        (*menu_open)(int32_t x, int32_t y, const char* const* labels, int count);
+
+    // --- prompt (name-entry box) ---
+    void        (*prompt_open)(const char* title, const char* initial_text, int max_length, const char* blocked_chars);
+
+    // --- launcher ---
+    void        (*launcher_open_file)(const char* path);
 } vigil_api_t;
 
 // returns the shared table

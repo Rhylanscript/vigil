@@ -18,9 +18,10 @@
 // built for ONE specific slot address, so no address patching is needed
 // The heap is 0x200000-0x2fffff, so slots start just above that
 //   slot 0: 0x400000   slot 1: 0x440000   slot 2: 0x480000   slot 3: 0x4c0000
+//   slot 4: 0x500000   slot 5: 0x540000   slot 6: 0x580000   slot 7: 0x5c0000
 #define LOADER_SLOTS_BASE    0x400000
 #define LOADER_SLOT_SIZE     0x40000     // 256 KB per app
-#define LOADER_SLOT_COUNT    4
+#define LOADER_SLOT_COUNT    8
 
 // the 24 bytes at the very start of an app file, the linker writes this
 // (see apps/sdk/app.ld); apps never fill it in themselves
