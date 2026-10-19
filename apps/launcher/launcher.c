@@ -45,9 +45,13 @@ static void start_terminal(void) {
     shell_init();
 }
 
+static void open_in_notepad(const char* path) {
+    notepad_open(path);
+}
+
 static const app_t builtin_apps[] = {
     { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor, 0, 0, 0, 0 },
-    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0 },
+    { "Notepad", notepad_start, notepad_redraw, notepad_handle_char, notepad_update_cursor, notepad_handle_click, 0, 0, 0, open_in_notepad },
     { "Files", files_start, files_redraw, files_handle_char, 0, files_handle_click, files_handle_right_click, files_handle_menu_pick, files_handle_prompt_done },
 };
 
@@ -113,6 +117,8 @@ static void copy_app(app_t* dest, const app_t* src) {
     dest->on_right_click = src->on_right_click;
     dest->on_menu_pick = src->on_menu_pick;
     dest->on_prompt_done = src->on_prompt_done;
+    dest->on_prompt_done = src->on_prompt_done;
+    dest->on_open_file = src->on_open_file;
 }
 
 static void place_home_button(int index) {
@@ -289,12 +295,12 @@ static void process_pending_open(void) {
     open_pending = 0;
 
     int index = find_app_index("Notepad");
-    if (index < 0) {
+    if (index < 0 || apps[index].on_open_file == 0) {
         return;
     }
 
     bring_to_front(index);
-    notepad_open(pending_open_path);
+    apps[index].on_open_file(pending_open_path);
 }
 
 void launcher_open_file(const char* path) {
