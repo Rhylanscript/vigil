@@ -38,7 +38,7 @@ The Terminal is a Command line shell built into the kernel with an 8 entry comma
 
 ### Notepad
 
-A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. Defaults to editing the file `/notes`. Using the `edit` command in shell allows editing of any file.
+A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. Defaults to editing the file `records/notes`. Using the `edit` command in shell allows editing of any file.
 
 ### Files
 
@@ -47,6 +47,10 @@ A simple file browser for navigating the file tree. Click a file to open it in N
 ### Calculator
 
 A simple calculator supporting `-`, `+`, `*`, `/`, and `%`, operated with the keyboard.
+
+### Tetris
+
+The classic falling blocks game. Left/Right move, Up rotates, Down drops one row, Space drops all the way, `P` pauses and `R` restarts. The game speeds up every 10 rows cleared, and your best score is saved to the file `records/tetris_best` on the storage disk.
 
 ### Hello
 
@@ -58,7 +62,7 @@ Click an app on the home screen to launch it. The `-` button (or the `Esc` key) 
 
 ### Builtin vs Loaded Apps
 
-The Terminal is built into the kernel, while Calculator, Files, Hello, and Notepad are compiled separately and installed in the `apps` folder on the persistent storage disk and loaded by the launcher at startup. Loaded apps use the kernel's VIGIL API to access services such as graphics and the filesystem, they are not isolated from the kernel.
+The Terminal is built into the kernel, while Calculator, Files, Hello, Tetris and Notepad are compiled separately and installed in the `apps` folder on the persistent storage disk and loaded by the launcher at startup. Loaded apps use the kernel's VIGIL API to access services such as graphics and the filesystem, they are not isolated from the kernel.
 
 ## How it works
 

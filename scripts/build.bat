@@ -213,6 +213,16 @@ if errorlevel 1 goto :error
 i686-elf-objcopy -O binary build/notepad.elf build/notepad.vapp
 if errorlevel 1 goto :error
 
+echo Building app: tetris (slot 4 = 0x500000)...
+i686-elf-gcc %APP_CFLAGS% -Iapps/tetris -c apps/tetris/tetris.c -o build/tetris_engine.o
+if errorlevel 1 goto :error
+i686-elf-gcc %APP_CFLAGS% -Iapps/tetris -c apps/tetris/tetris_app.c -o build/tetris_app.o
+if errorlevel 1 goto :error
+i686-elf-ld -T apps/sdk/app.ld -Ttext=0x500000 -o build/tetris.elf build/tetris_app.o build/tetris_engine.o
+if errorlevel 1 goto :error
+i686-elf-objcopy -O binary build/tetris.elf build/tetris.vapp
+if errorlevel 1 goto :error
+
 echo.
 
 :: link build files using linker script
@@ -296,6 +306,8 @@ if errorlevel 1 goto :error
 python tools/install_app.py dist/storage.img build/files.vapp apps/files
 if errorlevel 1 goto :error
 python tools/install_app.py dist/storage.img build/notepad.vapp apps/notepad
+if errorlevel 1 goto :error
+python tools/install_app.py dist/storage.img build/tetris.vapp apps/tetris
 if errorlevel 1 goto :error
 echo.
 

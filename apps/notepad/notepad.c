@@ -14,7 +14,7 @@ static const vigil_api_t* api = 0;
 // --- settings ---
 
 #define NOTEPAD_MAX_BYTES   2048
-#define NOTEPAD_DEFAULT_FILE "notes"
+#define NOTEPAD_DEFAULT_FILE FS_RECORDS_FOLDER "/notes"
 
 #define NOTEPAD_TOP         TITLE_BAR_HEIGHT
 #define NOTEPAD_BOTTOM      TASKBAR_HEIGHT
