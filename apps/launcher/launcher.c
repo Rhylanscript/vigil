@@ -108,7 +108,6 @@ static void copy_app(app_t* dest, const app_t* src) {
     dest->on_right_click = src->on_right_click;
     dest->on_menu_pick = src->on_menu_pick;
     dest->on_prompt_done = src->on_prompt_done;
-    dest->on_prompt_done = src->on_prompt_done;
     dest->on_open_file = src->on_open_file;
 }
 
