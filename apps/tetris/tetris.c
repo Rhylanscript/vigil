@@ -26,6 +26,7 @@ static int current_kind = 0;
 static int current_rotation = 0;
 static int current_x = 0;
 static int current_y = 0;
+static int ghost_y = 0;
 
 static int next_kind = 0;
 static int game_over = 0;
@@ -87,6 +88,13 @@ static int fits(int kind, int rotation, int piece_x, int piece_y) {
     return 1;
 }
 
+static void update_ghost(void) {
+    ghost_y = current_y;
+    while (fits(current_kind, current_rotation, current_x, ghost_y + 1)) {
+        ghost_y++;
+    }
+}
+
 // --- piece landing ---
 
 static void spawn_piece(void) {
@@ -99,6 +107,7 @@ static void spawn_piece(void) {
     if (!fits(current_kind, current_rotation, current_x, current_y)) {
         game_over = 1;
     }
+    update_ghost();
 }
 
 static void lock_piece(void) {
@@ -168,6 +177,7 @@ int tetris_move(int dx) {
         return 0;
     }
     current_x += dx;
+    update_ghost();
     return 1;
 }
 
@@ -183,6 +193,7 @@ int tetris_rotate(void) {
         if (fits(current_kind, new_rotation, current_x + kicks[i], current_y)) {
             current_rotation = new_rotation;
             current_x += kicks[i];
+            update_ghost();
             return 1;
         }
     }
@@ -226,6 +237,16 @@ int tetris_cell_at(int col, int row) {
         piece_cell(current_kind, current_rotation, i, &cell_x, &cell_y);
         if (current_x + cell_x == col && current_y + cell_y == row) {
             return current_kind + 1;
+        }
+    }
+    if (!game_over && ghost_y > current_y) {
+        for (int i = 0; i < 4; i++) {
+            int cell_x;
+            int cell_y;
+            piece_cell(current_kind, current_rotation, i, &cell_x, &cell_y);
+            if (current_x + cell_x == col && ghost_y + cell_y == row) {
+                return (current_kind + 1) | TETRIS_GHOST_FLAG;
+            }
         }
     }
     return 0;

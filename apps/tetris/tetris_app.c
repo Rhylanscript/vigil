@@ -42,7 +42,7 @@ static const vigil_api_t* api = 0;
 #define GRID_COLOR      ((gfx_color_t){0x24, 0x24, 0x24})
 #define GOLD_COLOR      ((gfx_color_t){0xff, 0xd0, 0x40})
 
-static const gfx_color_t piece_colors[TETRIS_PIECE_KINDS + 1] = {
+static const gfx_color_t piece_colors[TETRIS_PIECE_KINDS + 2] = {
     { 0x0a, 0x0a, 0x0a },   // 0 = empty square
     { 0x00, 0xc8, 0xe0 },   // 1 = I (cyan)
     { 0xe8, 0xd8, 0x20 },   // 2 = O (yellow)
@@ -51,6 +51,8 @@ static const gfx_color_t piece_colors[TETRIS_PIECE_KINDS + 1] = {
     { 0xd8, 0x30, 0x30 },   // 5 = Z (red)
     { 0x30, 0x50, 0xe0 },   // 6 = J (blue)
     { 0xf0, 0x90, 0x20 },   // 7 = L (orange)
+    
+    { 0x66, 0x66, 0x66 },   // 8 = ghost block
 };
 
 // --- speed ---
@@ -78,6 +80,7 @@ static uint32_t best_score = 0;
 static int over_handled = 0;
 static int new_best = 0;
 static int save_failed = 0;
+static int ghost_enabled = 1;
 
 // --- saving and loading highscore ---
 
@@ -147,15 +150,26 @@ static void compute_layout(void) {
 
 // --- drawing ---
 
-static void draw_cell(uint32_t x, uint32_t y, int kind_number) {
+static void draw_cell(uint32_t x, uint32_t y, int value) {
     api->gfx_fill_rect(x, y, CELL_SIZE, CELL_SIZE, GRID_COLOR);
-    api->gfx_fill_rect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2, piece_colors[kind_number]);
+
+    if (value & TETRIS_GHOST_FLAG) {
+        api->gfx_fill_rect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2, piece_colors[0]);
+        api->gfx_draw_rect_outline(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, piece_colors[8]);
+        api->gfx_draw_rect_outline(x + 3, y + 3, CELL_SIZE - 6, CELL_SIZE - 6, piece_colors[8]);
+        return;
+    }
+
+    api->gfx_fill_rect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2, piece_colors[value]);
 }
 
 static void refresh_board(void) {
     for (int row = 0; row < TETRIS_ROWS; row++) {
         for (int col = 0; col < TETRIS_COLS; col++) {
             int value = tetris_cell_at(col, row);
+            if (!ghost_enabled && (value & TETRIS_GHOST_FLAG)) {
+                value = 0;
+            }
             if (value == shown[row][col]) {
                 continue;
             }
@@ -243,6 +257,7 @@ static void draw_labels(void) {
         "Space: hard drop",
         "P: pause",
         "R: restart",
+        "G: toggle ghost",
         "Esc: minimize",
     };
     int count = (int) (sizeof(controls) / sizeof(controls[0]));
@@ -335,6 +350,13 @@ static void tetris_app_key(char c) {
     if (c == 'r' || c == 'R') {
         api->mouse_hide_cursor();
         new_game();
+        return;
+    }
+
+    if (c == 'g' || c == 'G') {
+        ghost_enabled = !ghost_enabled;
+        api->mouse_hide_cursor();
+        refresh_board();
         return;
     }
 

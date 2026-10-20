@@ -4,10 +4,12 @@
 #define TETRIS_H
 #include <stdint.h>
 
-#define TETRIS_COLS          10
-#define TETRIS_ROWS          20
-#define TETRIS_PIECE_KINDS   7  // I, O, T, S, Z, J, L
-#define TETRIS_PREVIEW_SIZE  4
+#define TETRIS_COLS         10
+#define TETRIS_ROWS         20
+#define TETRIS_PIECE_KINDS  7  // I, O, T, S, Z, J, L
+#define TETRIS_PREVIEW_SIZE 4
+
+#define TETRIS_GHOST_FLAG   0x10
 
 // --- game control ---
 
