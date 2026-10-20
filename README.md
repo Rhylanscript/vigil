@@ -38,7 +38,7 @@ The Terminal is a Command line shell built into the kernel with an 8 entry comma
 
 ### Notepad
 
-A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. Defaults to editing the file `/notes`. Using the `edit` command in shell allows editing of any file.
+A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. Defaults to editing the file `records/notes`. Using the `edit` command in shell allows editing of any file.
 
 ### Files
 
@@ -50,7 +50,7 @@ A simple calculator supporting `-`, `+`, `*`, `/`, and `%`, operated with the ke
 
 ### Tetris
 
-The classic falling blocks game. Left/Right move, Up rotates, Down drops one row, Space drops all the way, `P` pauses and `R` restarts. The game speeds up every 10 rows cleared, and your best score is saved to the file `tetris_best` on the storage disk.
+The classic falling blocks game. Left/Right move, Up rotates, Down drops one row, Space drops all the way, `P` pauses and `R` restarts. The game speeds up every 10 rows cleared, and your best score is saved to the file `records/tetris_best` on the storage disk.
 
 ### Hello
 
