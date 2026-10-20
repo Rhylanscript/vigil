@@ -7,6 +7,7 @@
 #include "title_bar.h"
 #include "taskbar.h"
 #include "tetris.h"
+#include "tetris_icon.h"
 
 // --- api pointer ---
 
@@ -419,5 +420,6 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     out_app->redraw = tetris_app_redraw;
     out_app->on_key = tetris_app_key;
     out_app->on_tick = tetris_app_tick;
+    out_app->icon = tetris_icon;
     return 0;
 }

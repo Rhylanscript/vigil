@@ -16,6 +16,7 @@
 #include "prompt.h"
 #include "loader.h"
 #include "shell.h"
+#include "shell_icon.h"
 
 // --- home screen layout (px) ---
 
@@ -53,7 +54,14 @@ static void start_terminal(void) {
 }
 
 static const app_t builtin_apps[] = {
-    { "Terminal", start_terminal, terminal_redraw, shell_handle_char, terminal_update_cursor },
+    {
+        .name = "Terminal",
+        .start = start_terminal,
+        .redraw = terminal_redraw,
+        .on_key = shell_handle_char,
+        .on_tick = terminal_update_cursor,
+        .icon = shell_icon,
+    },
 };
 
 #define BUILTIN_COUNT ((int) (sizeof(builtin_apps) / sizeof(builtin_apps[0])))

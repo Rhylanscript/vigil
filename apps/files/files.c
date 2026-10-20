@@ -5,6 +5,7 @@
 #include "font.h"
 #include "title_bar.h"
 #include "taskbar.h"
+#include "files_icon.h"
 
 // --- api pointer ---
 
@@ -583,5 +584,6 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     out_app->on_right_click = files_handle_right_click;
     out_app->on_menu_pick = files_handle_menu_pick;
     out_app->on_prompt_done = files_handle_prompt_done;
+    out_app->icon = files_icon;
     return 0;
 }
