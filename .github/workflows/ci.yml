@@ -22,8 +22,24 @@ jobs:
         run: |
           choco install nasm --yes --no-progress
           if ($LASTEXITCODE -ne 0) { throw "NASM installation failed" }
-          nasm -v
+
+          $nasm = Get-Command nasm.exe -ErrorAction SilentlyContinue
+          if ($nasm) {
+            $nasmPath = $nasm.Source
+          } else {
+            $candidates = @(
+              (Join-Path $env:ProgramFiles "NASM\nasm.exe"),
+              (Join-Path $env:ChocolateyInstall "bin\nasm.exe")
+            )
+            $nasmPath = $candidates |
+              Where-Object { Test-Path -LiteralPath $_ } |
+              Select-Object -First 1
+          }
+          if (-not $nasmPath) { throw "nasm.exe was not found after installation" }
+
+          & $nasmPath -v
           if ($LASTEXITCODE -ne 0) { throw "NASM is not available on PATH" }
+          Add-Content -Path $env:GITHUB_PATH -Value (Split-Path -Parent $nasmPath)
 
       - name: Install i686-elf toolchain
         shell: pwsh
