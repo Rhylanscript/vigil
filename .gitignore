@@ -29,3 +29,4 @@ dist/
 
 # stuff
 .private/
+apps/*/icon.png
