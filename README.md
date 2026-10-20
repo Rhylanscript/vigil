@@ -16,7 +16,7 @@ VIGIL boots from its own two stage bootloader into a 32-bit graphical desktop wi
 
 ### Terminal
 
-Command line shell with an 8 entry command history (cycle using up & down arrows).
+The Terminal is a Command line shell built into the kernel with an 8 entry command history (cycle using up & down arrows).
 
 | Command                   | What it does                                                              |
 | ------------------------- | ------------------------------------------------------------------------- |
@@ -34,6 +34,7 @@ Command line shell with an 8 entry command history (cycle using up & down arrows
 | `folder <path>`           | Create a folder at `<path>`                                               |
 | `rename <path> <name>`    | Rename a file at `<path>` to `<name>`                                     |
 | `files [folder]`          | Lists saved files in specified folder. If left blank defaults to root dir |
+| `loadapp <path>`          | Loads an app file from disk                                               |
 
 ### Notepad
 
@@ -41,21 +42,30 @@ A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace a
 
 ### Files
 
-A simple file viewing app, where you can navigate the file tree. Clicking on a file will open it in notepad, clicking a folder will change the view to the contents of that folder. Files / Folders can be managed from the app, for example, right clicking a file will bring up options such as renaming, deleting, or seeing more information about it.
+A simple file browser for navigating the file tree. Click a file to open it in Notepad, and click a folder to view its contents. Right click a file for options such as renaming, deleting, or viewing more information about it.
 
 ### Calculator
 
-A simple calculator app with simple operations such as (`-`, `+`, `*`, `/`, & `%`). Each command is linked to a keypress.
+A simple calculator supporting `-`, `+`, `*`, `/`, and `%`, operated with the keyboard.
+
+### Hello
+
+A small example app demonstrating that apps can be loaded from the storage disk rather than being built into the kernel.
 
 ### Using apps
 
-Click an app on the home screen to launch it. The `-` button (or the `Esc` key) minimizes an app and keeps it running in the taskbar whereas the `X` button closes it completely.
+Click an app on the home screen to launch it. The `-` button (or the `Esc` key) minimizes an app and keeps it running in the taskbar, while the `X` button closes it completely.
+
+### Builtin vs Loaded Apps
+
+The Terminal is built into the kernel, while Calculator, Files, Hello, and Notepad are compiled separately and installed in the `apps` folder on the persistent storage disk and loaded by the launcher at startup. Loaded apps use the kernel's VIGIL API to access services such as graphics and the filesystem, they are not isolated from the kernel.
 
 ## How it works
 
-1. **Stage 1:** the 512 byte boot sector the BIOS loads first, then it reads stage 2 from disk.
-2. **Stage 2:** enables the A20 line (access to memory above 1mb), asks the BIOS for a 1024x768 graphics mode, sets up the GDT, and switches the CPU to protected mode
-3. **The kernel:** (C) installs interrupt handlers, remaps the interrupt controller, starts the timer, keyboard and mouse, then hands control to the launcher, which runs forever
+1. **Stage 1:** The BIOS loads the 512-byte boot sector, which then reads stage 2 from disk
+2. **Stage 2:** Enables the A20 line (access to memory above 1mb), asks the BIOS for a 1024x768 graphics mode, sets up the GDT, and switches the CPU to protected mode
+3. **The kernel:** Installs interrupt handlers, remaps the interrupt controller, starts the timer, keyboard, and mouse, then hands control to the launcher
+4. **Loadable apps:** The launcher loads app files from the `apps` folder on the separate storage disk into memory and registers them for the home screen
 
 | Part          | Details                                                               |
 | ------------- | --------------------------------------------------------------------- |
@@ -65,18 +75,18 @@ Click an app on the home screen to launch it. The `-` button (or the `Esc` key) 
 | Input         | PS/2 keyboard (Shift, Caps Lock, Ctrl, arrows) and PS/2 mouse         |
 | Memory        | First-fit heap allocator over a 1 MB pool                             |
 | Storage       | ATA PIO disk driver on a separate 10 MB virtual disk                  |
-| Filesystem    | Up to 16 files, 16 char long names, with nested folder structure      |
+| Filesystem    | Up to 32 files and folders, 15-character names, with nested folders   |
 
 ## Running it
 
-I work on VIGIL on windows (unfortunately). I have some helper batch scripts for executing simple actions for me, which need [NASM][nasm], the [i686-elf cross-compiler tools][elf-tools], and [QEMU][qemu].
+VIGILs helper batch scripts are for Windows and require [NASM][nasm], the [i686-elf cross-compiler tools][elf-tools], [Python 3][python], and [QEMU][qemu].
 
 ```bash
 :: compile everything into dist/vigil.img
 vigil build
 
-:: boot it in QEMU (use --sdl)
-vigil run
+:: boot it in QEMU with an SDL window (--no-sdl boots it normally)
+vigil run [--no-sdl]
 
 :: build, then run
 vigil dev
@@ -85,7 +95,7 @@ vigil dev
 vigil clean
 ```
 
-Side note - I would PROBABLY recommend running the run command with `--sdl` as an arguement (but this isnt available for dev, so I kind of stopped using it... I should probably add that functionality for dev......)
+`vigil build` creates the boot image and installs the loadable apps onto `dist/storage.img`. The storage disk persists between builds, so close QEMU before building and reinstalling apps.
 
 ## License
 
@@ -96,5 +106,6 @@ Repo is under an [MIT license][license].
 [nasm]: https://www.nasm.us/
 [elf-tools]: https://github.com/lordmilko/i686-elf-tools
 [qemu]: https://www.qemu.org/
+[python]: https://www.python.org/downloads/
 
 [license]: LICENSE
