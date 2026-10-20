@@ -1,14 +1,15 @@
 // apps/notepad/notepad.c
 
-#include "notepad.h"
+#include "app.h"
+#include "api.h"
+#include "font.h"
+#include "keyboard.h"
 #include "title_bar.h"
 #include "taskbar.h"
-#include "graphics.h"
-#include "font.h"
-#include "kstring.h"
-#include "fs.h"
-#include "timer.h"
-#include "keyboard.h"
+
+// --- api pointer ---
+
+static const vigil_api_t* api = 0;
 
 // --- settings ---
 
@@ -71,11 +72,11 @@ static char wanted[NOTEPAD_MAX_ROWS][NOTEPAD_MAX_COLS];
 static void compute_layout(void) {
     uint32_t used = NOTEPAD_TOP + NOTEPAD_BOTTOM;
     uint32_t band_height = 0;
-    if (gfx_screen_height() > used) {
-        band_height = gfx_screen_height() - used;
+    if (api->gfx_screen_height() > used) {
+        band_height = api->gfx_screen_height() - used;
     }
 
-    text_cols = (int) (gfx_screen_width() / FONT_WIDTH);
+    text_cols = (int) (api->gfx_screen_width() / FONT_WIDTH);
     text_rows = (int) (band_height / FONT_HEIGHT);
 
     if (text_cols < 1) {
@@ -181,7 +182,7 @@ static void update_cursor_position(void) {
 // --- drawing ---
 
 static void paint_cursor_bar(gfx_color_t color) {
-    gfx_fill_rect(
+    api->gfx_fill_rect(
         cell_x(cursor_col),
         cell_y(cursor_row) + (FONT_HEIGHT - CURSOR_BAR_HEIGHT),
         FONT_WIDTH,
@@ -193,7 +194,7 @@ static void paint_cursor_bar(gfx_color_t color) {
 static void show_cursor(void) {
     cursor_blink_on = 1;
     paint_cursor_bar(NOTE_FG);
-    last_blink_tick = timer_get_ticks();
+    last_blink_tick = api->timer_get_ticks();
 }
 
 static void hide_cursor(void) {
@@ -201,7 +202,7 @@ static void hide_cursor(void) {
     paint_cursor_bar(NOTE_BG);
 
     if (cursor_index < length && text[cursor_index] != '\n') {
-        gfx_draw_char(cell_x(cursor_col), cell_y(cursor_row), text[cursor_index], NOTE_FG);
+        api->gfx_draw_char(cell_x(cursor_col), cell_y(cursor_row), text[cursor_index], NOTE_FG);
     }
 }
 
@@ -215,7 +216,7 @@ static void append_text(char* line, int* pos, const char* piece) {
 
 static void draw_status(void) {
     uint32_t y = cell_y(text_rows - STATUS_ROWS);
-    gfx_fill_rect(0, y, gfx_screen_width(), FONT_HEIGHT, STATUS_BG);
+    api->gfx_fill_rect(0, y, api->gfx_screen_width(), FONT_HEIGHT, STATUS_BG);
 
     char line[STATUS_LINE_MAX];
     char number[12];
@@ -225,21 +226,21 @@ static void draw_status(void) {
     append_text(line, &pos, file_path);
     append_text(line, &pos, "  |  Ctrl+S: save  |  ");
 
-    kuitoa((uint32_t) length, number);
+    api->kuitoa((uint32_t) length, number);
     append_text(line, &pos, number);
     append_text(line, &pos, " / ");
 
-    kuitoa(NOTEPAD_MAX_BYTES, number);
+    api->kuitoa(NOTEPAD_MAX_BYTES, number);
     append_text(line, &pos, number);
     append_text(line, &pos, " bytes  |  ");
 
     append_text(line, &pos, status_note);
 
-    gfx_draw_string(STATUS_TEXT_X, y, line, NOTE_FG);
+    api->gfx_draw_string(STATUS_TEXT_X, y, line, NOTE_FG);
 }
 
 static void draw_cell(int col, int row, char c) {
-    gfx_draw_char_bg(cell_x(col), cell_y(row), c, NOTE_FG, NOTE_BG);
+    api->gfx_draw_char_bg(cell_x(col), cell_y(row), c, NOTE_FG, NOTE_BG);
 }
 
 static void reset_shown(void) {
@@ -282,9 +283,9 @@ static void refresh_text(void) {
 }
 
 static void paint_screen(void) {
-    gfx_fill_rect(
+    api->gfx_fill_rect(
         0, NOTEPAD_TOP,
-        gfx_screen_width(), (uint32_t) text_rows * FONT_HEIGHT,
+        api->gfx_screen_width(), (uint32_t) text_rows * FONT_HEIGHT,
         NOTE_BG
     );
 
@@ -309,12 +310,12 @@ static void set_file_path(const char* path) {
 
 static int file_still_exists(void) {
     fs_info_t info;
-    return fs_stat(file_path, &info) == FS_OK;
+    return api->fs_stat(file_path, &info) == FS_OK;
 }
 
 static int load_file(const char* path) {
     uint32_t size = 0;
-    int result = fs_read_file(path, (uint8_t*) incoming, NOTEPAD_MAX_BYTES, &size);
+    int result = api->fs_read_file(path, (uint8_t*) incoming, NOTEPAD_MAX_BYTES, &size);
 
     if (result == FS_ERR_NOT_FOUND) {
         length = 0;
@@ -363,7 +364,7 @@ static void save_note(void) {
     }
     recreate_armed = 0;
 
-    int result = fs_write_file(file_path, (const uint8_t*) text, (uint32_t) length);
+    int result = api->fs_write_file(file_path, (const uint8_t*) text, (uint32_t) length);
 
     if (result == FS_OK) {
         status_note = "saved";
@@ -527,35 +528,9 @@ static void move_down(void) {
     }
 }
 
-// --- pub funcs (the app_t slots) ---
+// --- opening a specific file ---
 
-void notepad_start(void) {
-    compute_layout();
-    set_file_path(NOTEPAD_DEFAULT_FILE);
-    dirty = 0;
-    recreate_armed = 0;
-
-    save_allowed = load_file(file_path);
-    if (!save_allowed) {
-        length = 0;
-    }
-
-    cursor_index = length;
-    paint_screen();
-    desired_col = cursor_col;
-}
-
-void notepad_redraw(void) {
-    compute_layout();
-
-    if (file_on_disk && !file_still_exists()) {
-        status_note = "renamed or deleted - Ctrl+S twice to resave anyway";
-    }
-
-    paint_screen();
-}
-
-int notepad_open(const char* path) {
+static int open_file(const char* path) {
     if (dirty) {
         status_note = "unsaved changes - press Ctrl+S, then try again";
         draw_status();
@@ -578,7 +553,39 @@ int notepad_open(const char* path) {
     return 1;
 }
 
-void notepad_handle_char(char c) {
+static void notepad_open_file(const char* path) {
+    open_file(path);
+}
+
+// --- the app_t slots ---
+
+static void notepad_start(void) {
+    compute_layout();
+    set_file_path(NOTEPAD_DEFAULT_FILE);
+    dirty = 0;
+    recreate_armed = 0;
+
+    save_allowed = load_file(file_path);
+    if (!save_allowed) {
+        length = 0;
+    }
+
+    cursor_index = length;
+    paint_screen();
+    desired_col = cursor_col;
+}
+
+static void notepad_redraw(void) {
+    compute_layout();
+
+    if (file_on_disk && !file_still_exists()) {
+        status_note = "renamed or deleted - Ctrl+S twice to resave anyway";
+    }
+
+    paint_screen();
+}
+
+static void notepad_handle_char(char c) {
     if (c == KEY_CTRL_S) {
         save_note();
     } else if (c == '\b') {
@@ -606,7 +613,7 @@ void notepad_handle_char(char c) {
     // ignore any other input
 }
 
-void notepad_handle_click(int32_t x, int32_t y) {
+static void notepad_handle_click(int32_t x, int32_t y) {
     int col = (int) (x / FONT_WIDTH);
     int row = (int) ((y - NOTEPAD_TOP) / FONT_HEIGHT);
 
@@ -617,8 +624,8 @@ void notepad_handle_click(int32_t x, int32_t y) {
     move_cursor(index_at(row, col), 0);
 }
 
-void notepad_update_cursor(void) {
-    uint32_t frequency = timer_get_frequency();
+static void notepad_update_cursor(void) {
+    uint32_t frequency = api->timer_get_frequency();
     if (frequency == 0) {
         return;
     }
@@ -628,7 +635,7 @@ void notepad_update_cursor(void) {
         blink_interval_ticks = 1;
     }
 
-    uint32_t now = timer_get_ticks();
+    uint32_t now = api->timer_get_ticks();
     if (now - last_blink_tick < blink_interval_ticks) {
         return;
     }
@@ -639,4 +646,22 @@ void notepad_update_cursor(void) {
         show_cursor();
     }
     last_blink_tick = now;
+}
+
+// --- the entry point the loader calls ---
+
+int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
+    if (kernel_api->version != VIGIL_API_VERSION || kernel_api->struct_size < sizeof(vigil_api_t)) {
+        return 1;
+    }
+    api = kernel_api;
+
+    out_app->name = "Notepad";
+    out_app->start = notepad_start;
+    out_app->redraw = notepad_redraw;
+    out_app->on_key = notepad_handle_char;
+    out_app->on_tick = notepad_update_cursor;
+    out_app->on_click = notepad_handle_click;
+    out_app->on_open_file = notepad_open_file;
+    return 0;
 }

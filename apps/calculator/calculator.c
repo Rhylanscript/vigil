@@ -1,15 +1,16 @@
 // apps/calculator/calculator.c
 
-#include "calculator.h"
+#include "app.h"
+#include "api.h"
 #include "calc.h"
-#include "button.h"
-#include "graphics.h"
-#include "font.h"
-#include "kstring.h"
 #include "keyboard.h"
-#include "mouse.h"
+#include "font.h"
 #include "title_bar.h"
 #include "taskbar.h"
+
+// --- API pointer ---
+
+static const vigil_api_t* api = 0;
 
 // --- layout (pixels) ---
 
@@ -105,16 +106,16 @@ static gfx_color_t color_for(key_kind_t kind) {
 
 static uint32_t band_height(void) {
     uint32_t used = TITLE_BAR_HEIGHT + TASKBAR_HEIGHT;
-    if (gfx_screen_height() > used) {
-        return gfx_screen_height() - used;
+    if (api->gfx_screen_height() > used) {
+        return api->gfx_screen_height() - used;
     }
     return 0;
 }
 
 static void compute_layout(void) {
     origin_x = 0;
-    if (gfx_screen_width() > CALC_WIDTH) {
-        origin_x = (gfx_screen_width() - CALC_WIDTH) / 2;
+    if (api->gfx_screen_width() > CALC_WIDTH) {
+        origin_x = (api->gfx_screen_width() - CALC_WIDTH) / 2;
     }
 
     origin_y = TITLE_BAR_HEIGHT;
@@ -140,8 +141,8 @@ static void compute_layout(void) {
 // --- drawing ---
 
 static void draw_display(void) {
-    gfx_fill_rect(origin_x, origin_y, CALC_WIDTH, DISPLAY_H, DISPLAY_BG);
-    gfx_draw_rect_outline(origin_x, origin_y, CALC_WIDTH, DISPLAY_H, GFX_WHITE);
+    api->gfx_fill_rect(origin_x, origin_y, CALC_WIDTH, DISPLAY_H, DISPLAY_BG);
+    api->gfx_draw_rect_outline(origin_x, origin_y, CALC_WIDTH, DISPLAY_H, GFX_WHITE);
 
     const char* text;
     char number[12];
@@ -155,28 +156,28 @@ static void draw_display(void) {
         text = "Error: number too big";
         color = GFX_RED;
     } else {
-        kitoa(calc_display_value(), number);
+        api->kitoa(calc_display_value(), number);
         text = number;
     }
 
-    uint32_t text_width = kstrlen(text) * FONT_WIDTH;
+    uint32_t text_width = api->kstrlen(text) * FONT_WIDTH;
     uint32_t text_x = origin_x + CALC_WIDTH - DISPLAY_PAD - text_width;
     uint32_t text_y = origin_y + (DISPLAY_H - FONT_HEIGHT) / 2;
-    gfx_draw_string(text_x, text_y, text, color);
+    api->gfx_draw_string(text_x, text_y, text, color);
 
     char symbol = calc_op_symbol(calc_pending_op());
     if (symbol != 0 && error == CALC_OK) {
-        gfx_draw_char(origin_x + DISPLAY_PAD, origin_y + DISPLAY_PAD, symbol, GFX_GREEN);
+        api->gfx_draw_char(origin_x + DISPLAY_PAD, origin_y + DISPLAY_PAD, symbol, GFX_GREEN);
     }
 }
 
 static void paint(void) {
-    gfx_fill_rect(0, TITLE_BAR_HEIGHT, gfx_screen_width(), band_height(), GFX_BLACK);
+    api->gfx_fill_rect(0, TITLE_BAR_HEIGHT, api->gfx_screen_width(), band_height(), GFX_BLACK);
 
     draw_display();
 
     for (int i = 0; i < CALC_KEY_COUNT; i++) {
-        button_draw(&buttons[i]);
+        api->button_draw(&buttons[i]);
     }
 }
 
@@ -195,19 +196,19 @@ static void press_key(const key_def_t* key) {
 
 // --- app_t slots ---
 
-void calculator_start(void) {
+static void calculator_start(void) {
     calc_clear();
     compute_layout();
     paint();
 }
 
-void calculator_redraw(void) {
+static void calculator_redraw(void) {
     compute_layout();
     paint();
 }
 
-void calculator_handle_char(char c) {
-    mouse_hide_cursor();
+static void calculator_handle_char(char c) {
+    api->mouse_hide_cursor();
 
     calc_op_t op = calc_op_from_char(c);
 
@@ -230,12 +231,28 @@ void calculator_handle_char(char c) {
     draw_display();
 }
 
-void calculator_handle_click(int32_t x, int32_t y) {
-    int index = button_find_at(buttons, CALC_KEY_COUNT, x, y);
+static void calculator_handle_click(int32_t x, int32_t y) {
+    int index = api->button_find_at(buttons, CALC_KEY_COUNT, x, y);
     if (index < 0) {
         return;
     }
 
     press_key(&keys[index]);
     draw_display();
+}
+
+// --- the entry point the loader calls ---
+
+int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
+    if (kernel_api->version != VIGIL_API_VERSION || kernel_api->struct_size < sizeof(vigil_api_t)) {
+        return 1;
+    }
+    api = kernel_api;
+
+    out_app->name = "Calculator";
+    out_app->start = calculator_start;
+    out_app->redraw = calculator_redraw;
+    out_app->on_key = calculator_handle_char;
+    out_app->on_click = calculator_handle_click;
+    return 0;
 }

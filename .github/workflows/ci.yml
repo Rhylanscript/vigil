@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install NASM
+        shell: pwsh
+        run: |
+          choco install nasm --yes --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "NASM installation failed" }
+
+          $nasm = Get-Command nasm.exe -ErrorAction SilentlyContinue
+          if ($nasm) {
+            $nasmPath = $nasm.Source
+          } else {
+            $candidates = @(
+              (Join-Path $env:ProgramFiles "NASM\nasm.exe"),
+              (Join-Path $env:ChocolateyInstall "bin\nasm.exe")
+            )
+            $nasmPath = $candidates |
+              Where-Object { Test-Path -LiteralPath $_ } |
+              Select-Object -First 1
+          }
+          if (-not $nasmPath) { throw "nasm.exe was not found after installation" }
+
+          & $nasmPath -v
+          if ($LASTEXITCODE -ne 0) { throw "NASM is not available on PATH" }
+          Add-Content -Path $env:GITHUB_PATH -Value (Split-Path -Parent $nasmPath)
+
+      - name: Install i686-elf toolchain
+        shell: pwsh
+        run: |
+          $version = "15.2.0"
+          $archive = Join-Path $env:RUNNER_TEMP "i686-elf-tools-windows.zip"
+          $destination = Join-Path $env:RUNNER_TEMP "i686-elf-tools"
+          Invoke-WebRequest `
+            -Uri "https://github.com/lordmilko/i686-elf-tools/releases/download/$version/i686-elf-tools-windows.zip" `
+            -OutFile $archive
+          Expand-Archive -Path $archive -DestinationPath $destination
+
+          $gcc = Get-ChildItem -Path $destination -Filter "i686-elf-gcc.exe" -Recurse |
+            Select-Object -First 1
+          if (-not $gcc) { throw "i686-elf-gcc.exe was not found in the toolchain archive" }
+          Add-Content -Path $env:GITHUB_PATH -Value $gcc.DirectoryName
+
+      - name: Run installer tests
+        run: python -m unittest discover -s tools -p "test_*.py" -v
+
+      - name: Build VIGIL
+        shell: pwsh
+        run: |
+          cmd /c scripts\build.bat
+          if ($LASTEXITCODE -ne 0) { throw "VIGIL build failed" }

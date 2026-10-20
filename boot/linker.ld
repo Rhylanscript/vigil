@@ -16,7 +16,6 @@ SECTIONS
         build/irq.o(.text)
         build/irq_asm.o(.text)
         build/keyboard.o(.text)
-        build/shell.o(.text)
         build/kstring.o(.text)
         build/kprintf.o(.text)
         build/ata.o(.text)
@@ -30,13 +29,12 @@ SECTIONS
         build/button.o(.text)
         build/title_bar.o(.text)
         build/taskbar.o(.text)
-        build/launcher.o(.text)
-        build/notepad.o(.text)
         build/menu.o(.text)
-        build/files.o(.text)
         build/prompt.o(.text)
-        build/calc.o(.text)
-        build/calculator.o(.text)
+        build/vigil_api.o(.text)
+        build/loader.o(.text)
+        build/launcher.o(.text)
+        build/shell.o(.text)
     }
 
     .rodata : {
@@ -51,7 +49,6 @@ SECTIONS
         build/irq.o(.rodata)
         build/irq_asm.o(.rodata)
         build/keyboard.o(.rodata)
-        build/shell.o(.rodata)
         build/kstring.o(.rodata)
         build/kprintf.o(.rodata)
         build/ata.o(.rodata)
@@ -65,13 +62,12 @@ SECTIONS
         build/button.o(.rodata)
         build/title_bar.o(.rodata)
         build/taskbar.o(.rodata)
-        build/launcher.o(.rodata)
-        build/notepad.o(.rodata)
         build/menu.o(.rodata)
-        build/files.o(.rodata)
         build/prompt.o(.rodata)
-        build/calc.o(.rodata)
-        build/calculator.o(.rodata)
+        build/vigil_api.o(.rodata)
+        build/loader.o(.rodata)
+        build/launcher.o(.rodata)
+        build/shell.o(.rodata)
     }
 
     .data : {
@@ -86,7 +82,6 @@ SECTIONS
         build/irq.o(.data)
         build/irq_asm.o(.data)
         build/keyboard.o(.data)
-        build/shell.o(.data)
         build/kstring.o(.data)
         build/kprintf.o(.data)
         build/ata.o(.data)
@@ -100,13 +95,12 @@ SECTIONS
         build/button.o(.data)
         build/title_bar.o(.data)
         build/taskbar.o(.data)
-        build/launcher.o(.data)
-        build/notepad.o(.data)
         build/menu.o(.data)
-        build/files.o(.data)
         build/prompt.o(.data)
-        build/calc.o(.data)
-        build/calculator.o(.data)
+        build/vigil_api.o(.data)
+        build/loader.o(.data)
+        build/launcher.o(.data)
+        build/shell.o(.data)
     }
 
     .bss : {
@@ -122,7 +116,6 @@ SECTIONS
         build/irq.o(.bss)
         build/irq_asm.o(.bss)
         build/keyboard.o(.bss)
-        build/shell.o(.bss)
         build/kstring.o(.bss)
         build/kprintf.o(.bss)
         build/ata.o(.bss)
@@ -136,13 +129,12 @@ SECTIONS
         build/button.o(.bss)
         build/title_bar.o(.bss)
         build/taskbar.o(.bss)
-        build/launcher.o(.bss)
-        build/notepad.o(.bss)
         build/menu.o(.bss)
-        build/files.o(.bss)
         build/prompt.o(.bss)
-        build/calc.o(.bss)
-        build/calculator.o(.bss)
+        build/vigil_api.o(.bss)
+        build/loader.o(.bss)
+        build/launcher.o(.bss)
+        build/shell.o(.bss)
         __bss_end = .;
     }
 }

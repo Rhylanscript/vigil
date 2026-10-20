@@ -18,6 +18,8 @@ typedef struct {
     
     void (*on_menu_pick)(int index);
     void (*on_prompt_done)(const char* text);
+
+    void (*on_open_file)(const char* path);
 } app_t;
 
 #endif

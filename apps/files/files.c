@@ -1,15 +1,14 @@
 // apps/files/files.c
 
-#include "files.h"
-#include "fs.h"
-#include "graphics.h"
+#include "app.h"
+#include "api.h"
 #include "font.h"
-#include "kstring.h"
-#include "menu.h"
 #include "title_bar.h"
 #include "taskbar.h"
-#include "launcher.h"
-#include "prompt.h"
+
+// --- api pointer ---
+
+static const vigil_api_t* api = 0;
 
 // --- layout (pixels) ---
 
@@ -115,8 +114,8 @@ static void clear_message(void) {
 // --- paths ---
 
 static int child_path(const char* name, char* out) {
-    uint32_t base = kstrlen(current_path);
-    uint32_t needed = base + (base > 0 ? 1 : 0) + kstrlen(name);
+    uint32_t base = api->kstrlen(current_path);
+    uint32_t needed = base + (base > 0 ? 1 : 0) + api->kstrlen(name);
     if (needed >= FS_MAX_PATH) {
         return 0;
     }
@@ -161,7 +160,7 @@ static uint32_t list_top(void) {
 }
 
 static uint32_t footer_y(void) {
-    return gfx_screen_height() - FILES_BOTTOM - FOOTER_HEIGHT;
+    return api->gfx_screen_height() - FILES_BOTTOM - FOOTER_HEIGHT;
 }
 
 static uint32_t row_y(int row) {
@@ -170,10 +169,10 @@ static uint32_t row_y(int row) {
 
 static int rows_that_fit(void) {
     uint32_t used = FILES_TOP + FILES_BOTTOM + HEADER_HEIGHT + FOOTER_HEIGHT;
-    if (gfx_screen_height() <= used) {
+    if (api->gfx_screen_height() <= used) {
         return 0;
     }
-    return (int) ((gfx_screen_height() - used) / ROW_HEIGHT);
+    return (int) ((api->gfx_screen_height() - used) / ROW_HEIGHT);
 }
 
 static int visible_rows(void) {
@@ -208,7 +207,7 @@ static int entry_for_row(int row) {
 // --- drawing ---
 
 static void draw_header(void) {
-    gfx_fill_rect(0, FILES_TOP, gfx_screen_width(), HEADER_HEIGHT, BAR_COLOR);
+    api->gfx_fill_rect(0, FILES_TOP, api->gfx_screen_width(), HEADER_HEIGHT, BAR_COLOR);
 
     char line[FS_MAX_PATH + 16];
     int pos = 0;
@@ -217,18 +216,18 @@ static void draw_header(void) {
     append(line, &pos, (int) sizeof(line), current_path);
 
     uint32_t text_y = FILES_TOP + (HEADER_HEIGHT - FONT_HEIGHT) / 2;
-    gfx_draw_string(TEXT_X, text_y, line, GFX_WHITE);
+    api->gfx_draw_string(TEXT_X, text_y, line, GFX_WHITE);
 }
 
 static void draw_footer(void) {
     uint32_t y = footer_y();
-    gfx_fill_rect(0, y, gfx_screen_width(), FOOTER_HEIGHT, BAR_COLOR);
+    api->gfx_fill_rect(0, y, api->gfx_screen_width(), FOOTER_HEIGHT, BAR_COLOR);
 
     uint32_t text_y = y + (FOOTER_HEIGHT - FONT_HEIGHT) / 2;
     if (message[0] != '\0') {
-        gfx_draw_string(TEXT_X, text_y, message, MESSAGE_COLOR);
+        api->gfx_draw_string(TEXT_X, text_y, message, MESSAGE_COLOR);
     } else {
-        gfx_draw_string(TEXT_X, text_y, HINT_TEXT, GFX_WHITE);
+        api->gfx_draw_string(TEXT_X, text_y, HINT_TEXT, GFX_WHITE);
     }
 }
 
@@ -237,7 +236,7 @@ static void draw_row(int row) {
     int entry = entry_for_row(row);
 
     if (entry == PARENT_ENTRY) {
-        gfx_draw_string(TEXT_X, text_y, "..", FOLDER_COLOR);
+        api->gfx_draw_string(TEXT_X, text_y, "..", FOLDER_COLOR);
         return;
     }
 
@@ -250,29 +249,29 @@ static void draw_row(int row) {
     if (info->is_dir) {
         append(label, &pos, (int) sizeof(label), "/");
     }
-    gfx_draw_string(TEXT_X, text_y, label, info->is_dir ? FOLDER_COLOR : FILE_COLOR);
+    api->gfx_draw_string(TEXT_X, text_y, label, info->is_dir ? FOLDER_COLOR : FILE_COLOR);
 
     if (info->is_dir) {
-        gfx_draw_string(SIZE_COLUMN_X, text_y, "folder", FOLDER_COLOR);
+        api->gfx_draw_string(SIZE_COLUMN_X, text_y, "folder", FOLDER_COLOR);
     } else {
         char number[12];
         char size_text[24];
         int size_pos = 0;
         size_text[0] = '\0';
 
-        kuitoa(info->size_bytes, number);
+        api->kuitoa(info->size_bytes, number);
         append(size_text, &size_pos, (int) sizeof(size_text), number);
         append(size_text, &size_pos, (int) sizeof(size_text), " bytes");
-        gfx_draw_string(SIZE_COLUMN_X, text_y, size_text, FILE_COLOR);
+        api->gfx_draw_string(SIZE_COLUMN_X, text_y, size_text, FILE_COLOR);
     }
 }
 
 static void paint(void) {
     uint32_t band_height = 0;
-    if (gfx_screen_height() > (uint32_t) (FILES_TOP + FILES_BOTTOM)) {
-        band_height = gfx_screen_height() - FILES_TOP - FILES_BOTTOM;
+    if (api->gfx_screen_height() > (uint32_t) (FILES_TOP + FILES_BOTTOM)) {
+        band_height = api->gfx_screen_height() - FILES_TOP - FILES_BOTTOM;
     }
-    gfx_fill_rect(0, FILES_TOP, gfx_screen_width(), band_height, LIST_COLOR);
+    api->gfx_fill_rect(0, FILES_TOP, api->gfx_screen_width(), band_height, LIST_COLOR);
 
     draw_header();
 
@@ -282,7 +281,7 @@ static void paint(void) {
     }
 
     if (row_count() == 0) {
-        gfx_draw_string(TEXT_X, list_top() + 6, "(this folder is empty - right-click here to add something)", GFX_WHITE);
+        api->gfx_draw_string(TEXT_X, list_top() + 6, "(this folder is empty - right-click here to add something)", GFX_WHITE);
     }
 
     draw_footer();
@@ -291,11 +290,11 @@ static void paint(void) {
 // --- the folder contents ---
 
 static void refresh_list(void) {
-    entry_count = fs_list_dir(current_path, entries);
+    entry_count = api->fs_list_dir(current_path, entries);
 
     if (entry_count < 0) {
         current_path[0] = '\0';
-        entry_count = fs_list_dir(current_path, entries);
+        entry_count = api->fs_list_dir(current_path, entries);
         set_message("that folder no longer exists - back at the top");
     }
     if (entry_count < 0) {
@@ -327,12 +326,12 @@ static void open_path(const char* path, int is_dir) {
     if (is_dir) {
         show_folder(path);
     } else {
-        launcher_open_file(path);
+        api->launcher_open_file(path);
     }
 }
 
 static void forget_target(void) {
-    int result = fs_delete_file(target_path);
+    int result = api->fs_delete_file(target_path);
 
     if (result == FS_OK) {
         set_message("forgotten");
@@ -350,7 +349,7 @@ static void start_new_item(prompt_purpose_t purpose) {
     prompt_purpose = purpose;
 
     const char* title = (purpose == PURPOSE_NEW_FOLDER) ? "New folder name:" : "New file name:";
-    prompt_open(title, "", FS_MAX_NAME_LEN - 1, "/");
+    api->prompt_open(title, "", FS_MAX_NAME_LEN - 1, "/");
 }
 
 static void finish_new_item(const char* name, int is_folder) {
@@ -362,13 +361,13 @@ static void finish_new_item(const char* name, int is_folder) {
         int result;
 
         if (is_folder) {
-            result = fs_make_folder(path);
+            result = api->fs_make_folder(path);
         } else {
             fs_info_t existing;
-            if (fs_stat(path, &existing) == FS_OK) {
+            if (api->fs_stat(path, &existing) == FS_OK) {
                 result = FS_ERR_EXISTS;
             } else {
-                result = fs_write_file(path, (const uint8_t*) "", 0);
+                result = api->fs_write_file(path, (const uint8_t*) "", 0);
             }
         }
 
@@ -399,14 +398,14 @@ static void start_rename(void) {
 
     prompt_purpose = PURPOSE_RENAME;
 
-    prompt_open(title, target_name, FS_MAX_NAME_LEN - 1, "/");
+    api->prompt_open(title, target_name, FS_MAX_NAME_LEN - 1, "/");
 }
 
 static void finish_rename(const char* new_name) {
-    if (kstrcmp(new_name, target_name) == 0) {
+    if (api->kstrcmp(new_name, target_name) == 0) {
         set_message("name unchanged");
     } else {
-        int result = fs_rename(target_path, new_name);
+        int result = api->fs_rename(target_path, new_name);
 
         if (result == FS_OK) {
             set_message("renamed");
@@ -434,19 +433,19 @@ static void show_properties(void) {
 
     if (target_is_dir) {
         fs_info_t inside[FS_MAX_FILES];
-        int count = fs_list_dir(target_path, inside);
+        int count = api->fs_list_dir(target_path, inside);
         if (count < 0) {
             count = 0;
         }
 
-        kuitoa((uint32_t) count, number);
+        api->kuitoa((uint32_t) count, number);
         append(message, &pos, MESSAGE_MAX, ": folder, ");
         append(message, &pos, MESSAGE_MAX, number);
         append(message, &pos, MESSAGE_MAX, (count == 1) ? " item" : " items");
     } else {
         fs_info_t info;
-        if (fs_stat(target_path, &info) == FS_OK) {
-            kuitoa(info.size_bytes, number);
+        if (api->fs_stat(target_path, &info) == FS_OK) {
+            api->kuitoa(info.size_bytes, number);
             append(message, &pos, MESSAGE_MAX, ": file, ");
             append(message, &pos, MESSAGE_MAX, number);
             append(message, &pos, MESSAGE_MAX, " bytes");
@@ -460,20 +459,20 @@ static void show_properties(void) {
 
 // --- the app_t slots ---
 
-void files_start(void) {
+static void files_start(void) {
     current_path[0] = '\0';
     clear_message();
     refresh_list();
     paint();
 }
 
-void files_redraw(void) {
+static void files_redraw(void) {
     clear_message();
     refresh_list();
     paint();
 }
 
-void files_handle_char(char c) {
+static void files_handle_char(char c) {
     if (c == '\b') {
         if (has_parent_row()) {
             go_up();
@@ -481,7 +480,7 @@ void files_handle_char(char c) {
     }
 }
 
-void files_handle_click(int32_t x, int32_t y) {
+static void files_handle_click(int32_t x, int32_t y) {
     (void) x;
 
     int row = row_at(y);
@@ -505,12 +504,12 @@ void files_handle_click(int32_t x, int32_t y) {
     open_path(path, entries[entry].is_dir);
 }
 
-void files_handle_right_click(int32_t x, int32_t y) {
+static void files_handle_right_click(int32_t x, int32_t y) {
     int row = row_at(y);
     if (row < 0) {
         if (y >= (int32_t) list_top() && y < (int32_t) footer_y()) {
             active_menu = MENU_KIND_BACKGROUND;
-            menu_open(x, y, new_menu_labels, NEW_ACTION_COUNT);
+            api->menu_open(x, y, new_menu_labels, NEW_ACTION_COUNT);
         }
         return;
     }
@@ -532,10 +531,10 @@ void files_handle_right_click(int32_t x, int32_t y) {
     append(target_name, &name_pos, FS_MAX_NAME_LEN, entries[entry].name);
 
     active_menu = MENU_KIND_ITEM;
-    menu_open(x, y, menu_labels, ACTION_COUNT);
+    api->menu_open(x, y, menu_labels, ACTION_COUNT);
 }
 
-void files_handle_menu_pick(int index) {
+static void files_handle_menu_pick(int index) {
     if (active_menu == MENU_KIND_BACKGROUND) {
         if (index == NEW_FOLDER) {
             start_new_item(PURPOSE_NEW_FOLDER);
@@ -556,7 +555,7 @@ void files_handle_menu_pick(int index) {
     }
 }
 
-void files_handle_prompt_done(const char* text) {
+static void files_handle_prompt_done(const char* text) {
     if (prompt_purpose == PURPOSE_RENAME) {
         finish_rename(text);
     } else if (prompt_purpose == PURPOSE_NEW_FOLDER) {
@@ -566,4 +565,23 @@ void files_handle_prompt_done(const char* text) {
     }
 
     prompt_purpose = PURPOSE_NONE;
+}
+
+// --- loader entry point ---
+
+int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
+    if (kernel_api->version != VIGIL_API_VERSION || kernel_api->struct_size < sizeof(vigil_api_t)) {
+        return 1;
+    }
+    api = kernel_api;
+
+    out_app->name = "Files";
+    out_app->start = files_start;
+    out_app->redraw = files_redraw;
+    out_app->on_key = files_handle_char;
+    out_app->on_click = files_handle_click;
+    out_app->on_right_click = files_handle_right_click;
+    out_app->on_menu_pick = files_handle_menu_pick;
+    out_app->on_prompt_done = files_handle_prompt_done;
+    return 0;
 }
