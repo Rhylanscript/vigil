@@ -8,6 +8,8 @@
 #define FS_MAX_FILES 32
 #define FS_MAX_PATH 64
 
+#define FS_RECORDS_FOLDER "records"
+
 // --- return codes ---
 
 #define FS_OK             0

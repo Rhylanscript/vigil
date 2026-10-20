@@ -61,7 +61,7 @@ static const gfx_color_t piece_colors[TETRIS_PIECE_KINDS + 1] = {
 
 // --- saved high score ---
 
-#define BEST_FILE "tetris_best"
+#define BEST_FILE FS_RECORDS_FOLDER "/tetris_best"
 
 // --- state ---
 

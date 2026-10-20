@@ -35,6 +35,7 @@ void kernel_main(void) {
     mouse_install();
     enable_interrupts();
 
+    fs_make_folder(FS_RECORDS_FOLDER);
     launcher_init();
 
     for (;;) {
