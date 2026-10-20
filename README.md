@@ -48,6 +48,10 @@ A simple file browser for navigating the file tree. Click a file to open it in N
 
 A simple calculator supporting `-`, `+`, `*`, `/`, and `%`, operated with the keyboard.
 
+### Tetris
+
+The classic falling blocks game. Left/Right move, Up rotates, Down drops one row, Space drops all the way, `P` pauses and `R` restarts. The game speeds up every 10 rows cleared, and your best score is saved to the file `tetris_best` on the storage disk.
+
 ### Hello
 
 A small example app demonstrating that apps can be loaded from the storage disk rather than being built into the kernel.
@@ -58,7 +62,7 @@ Click an app on the home screen to launch it. The `-` button (or the `Esc` key) 
 
 ### Builtin vs Loaded Apps
 
-The Terminal is built into the kernel, while Calculator, Files, Hello, and Notepad are compiled separately and installed in the `apps` folder on the persistent storage disk and loaded by the launcher at startup. Loaded apps use the kernel's VIGIL API to access services such as graphics and the filesystem, they are not isolated from the kernel.
+The Terminal is built into the kernel, while Calculator, Files, Hello, Tetris and Notepad are compiled separately and installed in the `apps` folder on the persistent storage disk and loaded by the launcher at startup. Loaded apps use the kernel's VIGIL API to access services such as graphics and the filesystem, they are not isolated from the kernel.
 
 ## How it works
 
