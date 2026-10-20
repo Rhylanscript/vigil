@@ -8,10 +8,15 @@
 
 #define TEXT_X 40
 
+#define ICON_BG 0xff30a030
+#define ICON_FG 0xffffffff
+
 static const vigil_api_t* api = 0;
 
 static int clicks = 0;
 static button_t click_button;
+
+static uint32_t icon_pixels[APP_ICON_SIZE * APP_ICON_SIZE];
 
 static void paint(void) {
     uint32_t band = api->gfx_screen_height() - TITLE_BAR_HEIGHT - TASKBAR_HEIGHT;
@@ -26,6 +31,21 @@ static void paint(void) {
     api->gfx_draw_string(TEXT_X + 8 * FONT_WIDTH, TITLE_BAR_HEIGHT + 104, number, GFX_WHITE);
 
     api->button_draw(&click_button);
+}
+
+static void icon_box(int x, int y, int w, int h, uint32_t argb) {
+    for (int row = y; row < y + h; row++) {
+        for (int col = x; col < x + w; col++) {
+            icon_pixels[row * APP_ICON_SIZE + col] = argb;
+        }
+    }
+}
+
+static void build_icon(void) {
+    icon_box(2, 2, 28, 28, ICON_BG);
+    icon_box(8, 8, 4, 16, ICON_FG);
+    icon_box(20, 8, 4, 16, ICON_FG);
+    icon_box(12, 14, 8, 4, ICON_FG);
 }
 
 static void hello_start(void) {
@@ -67,10 +87,13 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     }
     api = kernel_api;
 
+    build_icon();
+
     out_app->name = "Hello";
     out_app->start = hello_start;
     out_app->redraw = hello_redraw;
     out_app->on_key = hello_on_key;
     out_app->on_click = hello_on_click;
+    out_app->icon = icon_pixels;
     return 0;
 }

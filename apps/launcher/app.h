@@ -4,6 +4,8 @@
 #define APP_H
 #include <stdint.h>
 
+#define APP_ICON_SIZE 32
+
 typedef struct {
     const char* name;
 
@@ -20,6 +22,8 @@ typedef struct {
     void (*on_prompt_done)(const char* text);
 
     void (*on_open_file)(const char* path);
+
+    const uint32_t* icon;
 } app_t;
 
 #endif

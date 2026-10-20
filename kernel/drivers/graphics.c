@@ -111,6 +111,18 @@ void gfx_draw_rect_outline(uint32_t x, uint32_t y, uint32_t width, uint32_t heig
     gfx_fill_rect(x + width - 1, y, 1, height, color);
 }
 
+void gfx_draw_icon(uint32_t x, uint32_t y, const uint32_t* pixels, uint32_t size, uint32_t scale) {
+    for (uint32_t row = 0; row < size; row++) {
+        for (uint32_t col = 0; col < size; col++) {
+            uint32_t argb = pixels[row * size + col];
+            if ((argb >> 24) < 128) continue;
+
+            gfx_color_t colour = { (uint8_t) (argb >> 16), (uint8_t) (argb >> 8), (uint8_t) argb };
+            gfx_fill_rect(x + col * scale, y + row * scale, scale, scale, colour);
+        }
+    }
+}
+
 void gfx_scroll_region_up(uint32_t top_y, uint32_t region_height, uint32_t pixel_rows, gfx_color_t fill_color) {
     if (top_y >= screen_height) {
         return;

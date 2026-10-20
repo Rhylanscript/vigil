@@ -21,16 +21,26 @@
 
 #define HOME_TITLE              "VIGIL"
 #define HOME_HINT               "Click '-' to minimize an app, click 'X' to close it"
+
 #define HOME_TITLE_Y            120
 #define HOME_FIRST_BUTTON_Y     200
+#define HOME_HINT_MARGIN        (TASKBAR_HEIGHT + 40)
+#define HOME_BUTTON_COLOR       ((gfx_color_t){0x30, 0x30, 0x30})
+#define HOME_RUNNING_COLOR      GFX_GREEN
+
+#define HOME_COLUMNS            4
+#define HOME_TILE_WIDTH         128
+#define HOME_TILE_HEIGHT        112
+#define HOME_TILE_GAP           24
+#define HOME_TILE_PAD           8
+
+#define HOME_ICON_SCALE         2
+#define HOME_ICON_PX            (APP_ICON_SIZE * HOME_ICON_SCALE)
+#define HOME_LABEL_GAP          12
+
 #define HOME_BUTTON_WIDTH       240
 #define HOME_BUTTON_HEIGHT      48
 #define HOME_BUTTON_GAP         16
-#define HOME_HINT_MARGIN        (TASKBAR_HEIGHT + 40)
-#define HOME_BUTTON_COLOR       ((gfx_color_t){0x30, 0x30, 0x30})
-
-#define HOME_LABEL_MAX          32
-#define HOME_RUNNING_SUFFIX     " (running)"
 
 // --- apps ---
 
@@ -68,34 +78,12 @@ static app_state_t app_state[MAX_APPS];
 
 static const app_t* volatile running_app = 0;
 
-static char home_labels[MAX_APPS][HOME_LABEL_MAX];
-
 static int taskbar_slot_app[MAX_APPS];
 
 // --- helpers ---
 
 static int app_index(const app_t* app) {
     return (int) (app - apps);
-}
-
-static void build_home_label(int index) {
-    char* out = home_labels[index];
-    const char* name = apps[index].name;
-    int pos = 0;
-
-    for (int i = 0; name[i] != '\0' && pos < HOME_LABEL_MAX - 1; i++) {
-        out[pos] = name[i];
-        pos++;
-    }
-
-    if (app_state[index] != APP_STATE_STOPPED) {
-        const char* suffix = HOME_RUNNING_SUFFIX;
-        for (int i = 0; suffix[i] != '\0' && pos < HOME_LABEL_MAX - 1; i++) {
-            out[pos] = suffix[i];
-            pos++;
-        }
-    }
-    out[pos] = '\0';
 }
 
 static void copy_app(app_t* dest, const app_t* src) {
@@ -109,19 +97,24 @@ static void copy_app(app_t* dest, const app_t* src) {
     dest->on_menu_pick = src->on_menu_pick;
     dest->on_prompt_done = src->on_prompt_done;
     dest->on_open_file = src->on_open_file;
+    dest->icon = src->icon;
 }
 
 static void place_home_button(int index) {
-    uint32_t button_x = 0;
-    if (gfx_screen_width() > HOME_BUTTON_WIDTH) {
-        button_x = (gfx_screen_width() - HOME_BUTTON_WIDTH) / 2;
+    int column = index % HOME_COLUMNS;
+    int row = index / HOME_COLUMNS;
+
+    uint32_t grid_width = HOME_COLUMNS * HOME_TILE_WIDTH + (HOME_COLUMNS - 1) * HOME_TILE_GAP;
+    uint32_t grid_x = 0;
+    if (gfx_screen_width() > grid_width) {
+        grid_x = (gfx_screen_width() - grid_width) / 2;
     }
 
-    home_buttons[index].x = button_x;
-    home_buttons[index].y = HOME_FIRST_BUTTON_Y + (uint32_t) index * (HOME_BUTTON_HEIGHT + HOME_BUTTON_GAP);
-    home_buttons[index].width = HOME_BUTTON_WIDTH;
-    home_buttons[index].height = HOME_BUTTON_HEIGHT;
-    home_buttons[index].label = home_labels[index];
+    home_buttons[index].x = grid_x + (uint32_t) column * (HOME_TILE_WIDTH + HOME_TILE_GAP);
+    home_buttons[index].y = HOME_FIRST_BUTTON_Y + (uint32_t) row * (HOME_TILE_HEIGHT + HOME_TILE_GAP);
+    home_buttons[index].width = HOME_TILE_WIDTH;
+    home_buttons[index].height = HOME_TILE_HEIGHT;
+    home_buttons[index].label = apps[index].name;
     home_buttons[index].color = HOME_BUTTON_COLOR;
     home_buttons[index].on_click = 0;
 }
@@ -169,6 +162,39 @@ static void draw_taskbar(void) {
     taskbar_draw(items, count);
 }
 
+static void draw_home_tile(int index) {
+    const button_t* tile = &home_buttons[index];
+    const char* name = apps[index].name;
+
+    uint32_t icon_x = tile->x + (tile->width - HOME_ICON_PX) / 2;
+    uint32_t icon_y = tile->y + HOME_TILE_PAD;
+
+    if (apps[index].icon != 0) {
+        gfx_draw_icon(icon_x, icon_y, apps[index].icon, APP_ICON_SIZE, HOME_ICON_SCALE);
+    } else {
+        gfx_fill_rect(icon_x, icon_y, HOME_ICON_PX, HOME_ICON_PX, HOME_BUTTON_COLOR);
+        gfx_draw_rect_outline(icon_x, icon_y, HOME_ICON_PX, HOME_ICON_PX, GFX_WHITE);
+        gfx_draw_char(
+            icon_x + (HOME_ICON_PX - FONT_WIDTH) / 2,
+            icon_y + (HOME_ICON_PX - FONT_HEIGHT) / 2,
+            name[0],
+            GFX_WHITE
+        );
+    }
+
+    uint32_t text_width = kstrlen(name) * FONT_WIDTH;
+    uint32_t text_x = tile->x;
+    if (text_width < tile->width) {
+        text_x += (tile->width - text_width) / 2;
+    }
+
+    gfx_color_t label_color = GFX_WHITE;
+    if (app_state[index] != APP_STATE_STOPPED) {
+        label_color = HOME_RUNNING_COLOR;
+    }
+    gfx_draw_string(text_x, icon_y + HOME_ICON_PX + HOME_LABEL_GAP, name, label_color);
+}
+
 static void draw_home_screen(void) {
     mouse_hide_cursor();
     gfx_clear(GFX_BLACK);
@@ -177,8 +203,7 @@ static void draw_home_screen(void) {
     draw_taskbar();
 
     for (int i = 0; i < app_count; i++) {
-        build_home_label(i);
-        button_draw(&home_buttons[i]);
+        draw_home_tile(i);
     }
 
     draw_centered_string(gfx_screen_height() - HOME_HINT_MARGIN, HOME_HINT, GFX_WHITE);
