@@ -30,6 +30,8 @@ void gfx_draw_string(uint32_t x, uint32_t y, const char* str, gfx_color_t color)
 void gfx_fill_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color);
 void gfx_draw_rect_outline(uint32_t x, uint32_t y, uint32_t width, uint32_t height, gfx_color_t color);
 
+void gfx_draw_icon(uint32_t x, uint32_t y, const uint32_t* pixels, uint32_t size, uint32_t scale);
+
 uint32_t gfx_screen_width(void);
 uint32_t gfx_screen_height(void);
 

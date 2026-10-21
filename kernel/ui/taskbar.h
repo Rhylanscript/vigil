@@ -4,12 +4,13 @@
 #define TASKBAR_H
 #include <stdint.h>
 
-#define TASKBAR_HEIGHT 32
+#define TASKBAR_HEIGHT 48
 #define TASKBAR_MAX_ITEMS 8
 
 typedef struct {
     const char* label;
     int highlighted;
+    const uint32_t* icon;
 } taskbar_item_t;
 
 void taskbar_draw(const taskbar_item_t* items, int count);

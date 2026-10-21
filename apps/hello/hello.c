@@ -5,6 +5,7 @@
 #include "font.h"
 #include "title_bar.h"
 #include "taskbar.h"
+#include "hello_icon.h"
 
 #define TEXT_X 40
 
@@ -12,6 +13,8 @@ static const vigil_api_t* api = 0;
 
 static int clicks = 0;
 static button_t click_button;
+
+static uint32_t icon_pixels[APP_ICON_SIZE * APP_ICON_SIZE];
 
 static void paint(void) {
     uint32_t band = api->gfx_screen_height() - TITLE_BAR_HEIGHT - TASKBAR_HEIGHT;
@@ -72,5 +75,6 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     out_app->redraw = hello_redraw;
     out_app->on_key = hello_on_key;
     out_app->on_click = hello_on_click;
+    out_app->icon = hello_icon;
     return 0;
 }

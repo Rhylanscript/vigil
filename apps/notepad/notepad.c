@@ -6,6 +6,7 @@
 #include "keyboard.h"
 #include "title_bar.h"
 #include "taskbar.h"
+#include "notepad_icon.h"
 
 // --- api pointer ---
 
@@ -663,5 +664,6 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     out_app->on_tick = notepad_update_cursor;
     out_app->on_click = notepad_handle_click;
     out_app->on_open_file = notepad_open_file;
+    out_app->icon = notepad_icon;
     return 0;
 }

@@ -7,6 +7,7 @@
 #include "font.h"
 #include "title_bar.h"
 #include "taskbar.h"
+#include "calculator_icon.h"
 
 // --- API pointer ---
 
@@ -254,5 +255,6 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     out_app->redraw = calculator_redraw;
     out_app->on_key = calculator_handle_char;
     out_app->on_click = calculator_handle_click;
+    out_app->icon = calculator_icon;
     return 0;
 }
