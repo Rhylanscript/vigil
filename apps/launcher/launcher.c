@@ -163,6 +163,7 @@ static void draw_taskbar(void) {
         }
         items[count].label = apps[i].name;
         items[count].highlighted = (app_state[i] == APP_STATE_FOREGROUND);
+        items[count].icon = apps[i].icon;
         taskbar_slot_app[count] = i;
         count++;
     }
