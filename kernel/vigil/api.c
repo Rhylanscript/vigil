@@ -10,6 +10,7 @@
 #include "heap.h"
 #include "menu.h"
 #include "prompt.h"
+#include "dialog.h"
 #include "launcher.h"
 
 // The table itself which is filled in at compile time
@@ -59,6 +60,9 @@ static const vigil_api_t api = {
     .menu_open              = menu_open,
     .prompt_open            = prompt_open,
     .launcher_open_file     = launcher_open_file,
+    
+    .dialog_open            = dialog_open,
+    .launcher_close_app     = launcher_close_app,
 };
 
 const vigil_api_t* api_get(void) {
