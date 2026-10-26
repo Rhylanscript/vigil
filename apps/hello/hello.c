@@ -14,8 +14,6 @@ static const vigil_api_t* api = 0;
 static int clicks = 0;
 static button_t click_button;
 
-static uint32_t icon_pixels[APP_ICON_SIZE * APP_ICON_SIZE];
-
 static void paint(void) {
     uint32_t band = api->gfx_screen_height() - TITLE_BAR_HEIGHT - TASKBAR_HEIGHT;
     api->gfx_fill_rect(0, TITLE_BAR_HEIGHT, api->gfx_screen_width(), band, GFX_BLACK);
