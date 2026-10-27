@@ -21,6 +21,7 @@
 #include "fs.h"
 #include "menu.h"
 #include "prompt.h"
+#include "dialog.h"
 #include "launcher.h"
 
 // bumped whenever the table changes such that old apps cant gracefully handle
@@ -83,6 +84,10 @@ typedef struct {
 
     // --- launcher ---
     void        (*launcher_open_file)(const char* path);
+
+    // --- dialog (modal choice box) ---
+    void        (*dialog_open)(const char* title, const char* message, const char* const* labels, int count);
+    void        (*launcher_close_app)(void);
 } vigil_api_t;
 
 // returns the shared table

@@ -23,6 +23,9 @@ typedef struct {
 
     void (*on_open_file)(const char* path);
 
+    int (*on_close_request)(void);
+    void (*on_dialog_done)(int index);
+
     const uint32_t* icon;
 } app_t;
 

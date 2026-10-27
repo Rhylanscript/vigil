@@ -36,6 +36,10 @@ static const vigil_api_t* api = 0;
 #define NOTEPAD_MAX_COLS    128
 #define NOTEPAD_MAX_ROWS    48
 
+#define CLOSE_SAVE          0
+#define CLOSE_DISCARD       1
+#define CLOSE_CANCEL        2
+
 // --- state ---
 
 static char text[NOTEPAD_MAX_BYTES];
@@ -558,6 +562,31 @@ static void notepad_open_file(const char* path) {
     open_file(path);
 }
 
+// --- close dialog ---
+
+static const char* const close_labels[3] = {
+    "Save",
+    "Discard",
+    "Cancel"
+};
+
+static int notepad_close_request(void) {
+    if (!dirty) return 1;
+    api->dialog_open("Unsaved changes", "Save changes before closing?", close_labels, 3);
+    return 0;
+}
+
+static void notepad_dialog_done(int index) {
+    if (index == CLOSE_SAVE) {
+        save_note();
+        if (dirty) return;
+        api->launcher_close_app();
+    } else if (index == CLOSE_DISCARD) {
+        dirty = 0;
+        api->launcher_close_app();
+    }
+}
+
 // --- the app_t slots ---
 
 static void notepad_start(void) {
@@ -664,6 +693,8 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     out_app->on_tick = notepad_update_cursor;
     out_app->on_click = notepad_handle_click;
     out_app->on_open_file = notepad_open_file;
+    out_app->on_close_request = notepad_close_request;
+    out_app->on_dialog_done = notepad_dialog_done;
     out_app->icon = notepad_icon;
     return 0;
 }

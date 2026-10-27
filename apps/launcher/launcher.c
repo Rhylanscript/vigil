@@ -17,6 +17,7 @@
 #include "loader.h"
 #include "shell.h"
 #include "shell_icon.h"
+#include "dialog.h"
 
 // --- home screen layout (px) ---
 
@@ -105,6 +106,8 @@ static void copy_app(app_t* dest, const app_t* src) {
     dest->on_menu_pick = src->on_menu_pick;
     dest->on_prompt_done = src->on_prompt_done;
     dest->on_open_file = src->on_open_file;
+    dest->on_close_request = src->on_close_request;
+    dest->on_dialog_done = src->on_dialog_done;
     dest->icon = src->icon;
 }
 
@@ -222,6 +225,7 @@ static void show_home_screen(void) {
     running_app = 0;
     menu_close();
     prompt_close();
+    dialog_close();
     mouse_left_clicked();
     draw_home_screen();
 }
@@ -253,6 +257,26 @@ static void close_foreground_app(void) {
 
     app_state[app_index(app)] = APP_STATE_STOPPED;
     show_home_screen();
+}
+
+static void request_close_foreground_app(void) {
+    const app_t* app = running_app;
+    if (app == 0) {
+        return;
+    }
+
+    if (app->on_close_request != 0) {
+        mouse_hide_cursor();
+        if (!app->on_close_request()) {
+            return;
+        }
+    }
+
+    close_foreground_app();
+}
+
+void launcher_close_app(void) {
+    close_foreground_app();
 }
 
 static void minimize_foreground_app(void) {
@@ -383,6 +407,32 @@ static void handle_prompt_key(char c) {
     }
 }
 
+// --- confirm dialog ---
+
+static void finish_dialog(int pick) {
+    mouse_hide_cursor();
+    redraw_running_app();
+
+    const app_t* app = running_app;
+    if (app != 0 && app->on_dialog_done != 0) {
+        app->on_dialog_done(pick);
+    }
+}
+
+static void handle_dialog_key(char c) {
+    int pick = dialog_handle_key(c);
+    if (pick != DIALOG_NO_PICK) {
+        finish_dialog(pick);
+    }
+}
+
+static void handle_dialog_click(int32_t x, int32_t y) {
+    int pick = dialog_click(x, y);
+    if (pick != DIALOG_NO_PICK) {
+        finish_dialog(pick);
+    }
+}
+
 // --- keyboard ---
 
 static void launcher_handle_key(char c) {
@@ -391,7 +441,12 @@ static void launcher_handle_key(char c) {
     if (app == 0) {
         return;
     }
-    
+
+    if (dialog_is_open()) {
+        handle_dialog_key(c);
+        return;
+    }
+
     if (prompt_is_open()) {
         handle_prompt_key(c);
         return;
@@ -449,6 +504,13 @@ void launcher_update(void) {
     int32_t mouse_x = mouse_get_x();
     int32_t mouse_y = mouse_get_y();
 
+    if (dialog_is_open()) {
+        if (clicked) {
+            handle_dialog_click(mouse_x, mouse_y);
+        }
+        return;
+    }
+
     if (prompt_is_open()) {
         return;
     }
@@ -477,7 +539,7 @@ void launcher_update(void) {
             title_bar_hit_t hit = title_bar_hit_test(mouse_x, mouse_y);
 
             if (hit == TITLE_BAR_HIT_CLOSE) {
-                close_foreground_app();
+                request_close_foreground_app();
                 return;
             }
             if (hit == TITLE_BAR_HIT_MINIMIZE) {

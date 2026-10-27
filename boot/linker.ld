@@ -35,6 +35,7 @@ SECTIONS
         build/loader.o(.text)
         build/launcher.o(.text)
         build/shell.o(.text)
+        build/dialog.o(.text)
     }
 
     .rodata : {
@@ -68,6 +69,7 @@ SECTIONS
         build/loader.o(.rodata)
         build/launcher.o(.rodata)
         build/shell.o(.rodata)
+        build/dialog.o(.rodata)
     }
 
     .data : {
@@ -101,6 +103,7 @@ SECTIONS
         build/loader.o(.data)
         build/launcher.o(.data)
         build/shell.o(.data)
+        build/dialog.o(.data)
     }
 
     .bss : {
@@ -135,6 +138,7 @@ SECTIONS
         build/loader.o(.bss)
         build/launcher.o(.bss)
         build/shell.o(.bss)
+        build/dialog.o(.bss)
         __bss_end = .;
     }
 }
