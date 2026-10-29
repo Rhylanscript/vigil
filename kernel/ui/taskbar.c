@@ -11,6 +11,7 @@
 #define FALLBACK_COLOR      ((gfx_color_t){0x40, 0x40, 0x40})
 #define FOCUS_BAR_COLOR     ((gfx_color_t){0x30, 0xd0, 0x30})
 #define OPEN_BAR_COLOR      ((gfx_color_t){0x90, 0x90, 0x90})
+#define HOVER_COLOR         ((gfx_color_t){0x30, 0x30, 0x30})
 
 #define ITEM_WIDTH       48
 #define ITEM_GAP         4
@@ -26,6 +27,7 @@
 
 static button_t item_buttons[TASKBAR_MAX_ITEMS];
 static int item_count = 0;
+static int hovered_slot = -1;
 
 // --- drawing one item ---
 
@@ -92,6 +94,10 @@ void taskbar_draw(const taskbar_item_t* items, int count) {
         slot->color = TASKBAR_COLOR;
         slot->on_click = 0;
 
+        if (item_count == hovered_slot) {
+            gfx_fill_rect(slot->x, slot->y+1, slot->width, slot->height-1, HOVER_COLOR);
+        }
+
         draw_item(slot, &items[i]);
 
         item_count++;
@@ -101,4 +107,15 @@ void taskbar_draw(const taskbar_item_t* items, int count) {
 
 int taskbar_hit_test(int32_t px, int32_t py) {
     return button_find_at(item_buttons, item_count, px, py);
+}
+
+void taskbar_set_hover(int slot) {
+    hovered_slot = slot;
+}
+
+uint32_t taskbar_slot_center_x(int slot) {
+    if (slot < 0 || slot >= item_count) {
+        return 0;
+    }
+    return item_buttons[slot].x + item_buttons[slot].width / 2;
 }
