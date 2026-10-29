@@ -44,6 +44,16 @@
 #define HOME_BUTTON_HEIGHT      48
 #define HOME_BUTTON_GAP         16
 
+#define HOME_HOVER_COLOR        ((gfx_color_t){0x28, 0x28, 0x28})
+
+#define TOOLTIP_MAX_CHARS       16
+#define TOOLTIP_PAD_X           8
+#define TOOLTIP_PAD_Y           4
+#define TOOLTIP_GAP             6
+#define TOOLTIP_MAX_W           (TOOLTIP_MAX_CHARS * FONT_WIDTH + 2 * TOOLTIP_PAD_X)
+#define TOOLTIP_H               (FONT_HEIGHT + 2 * TOOLTIP_PAD_Y)
+#define TOOLTIP_COLOR           ((gfx_color_t){0x30, 0x30, 0x30})
+
 // --- apps ---
 
 static void start_terminal(void) {
@@ -88,6 +98,21 @@ static app_state_t app_state[MAX_APPS];
 static const app_t* volatile running_app = 0;
 
 static int taskbar_slot_app[MAX_APPS];
+
+// --- hover state ---
+
+static int hover_tile = -1;
+static int hover_slot = -1;
+static title_bar_hit_t hover_title = TITLE_BAR_HIT_NONE;
+
+static int32_t last_mouse_x = -1;
+static int32_t last_mouse_y = -1;
+
+static gfx_color_t tooltip_saved[TOOLTIP_H][TOOLTIP_MAX_W];
+static uint32_t tooltip_x = 0;
+static uint32_t tooltip_y = 0;
+static uint32_t tooltip_w = 0;
+static int tooltip_up = 0;
 
 // --- helpers ---
 
@@ -178,6 +203,9 @@ static void draw_home_tile(int index) {
     const button_t* tile = &home_buttons[index];
     const char* name = apps[index].name;
 
+    gfx_color_t background = (index == hover_tile) ? HOME_HOVER_COLOR : GFX_BLACK;
+    gfx_fill_rect(tile->x, tile->y, tile->width, tile->height, background);
+
     uint32_t icon_x = tile->x + (tile->width - HOME_ICON_PX) / 2;
     uint32_t icon_y = tile->y + HOME_TILE_PAD;
 
@@ -221,12 +249,148 @@ static void draw_home_screen(void) {
     draw_centered_string(gfx_screen_height() - HOME_HINT_MARGIN, HOME_HINT, GFX_WHITE);
 }
 
+// --- tooltip ---
+
+static void tooltip_show(int slot) {
+    uint32_t screen_w = gfx_screen_width();
+    uint32_t screen_h = gfx_screen_height();
+
+    if (screen_h < TASKBAR_HEIGHT + TOOLTIP_GAP + TOOLTIP_H) {
+        return;
+    }
+
+    const char* name = apps[taskbar_slot_app[slot]].name;
+    char text[TOOLTIP_MAX_CHARS + 1];
+    uint32_t chars = 0;
+    while (name[chars] != '\0' && chars < TOOLTIP_MAX_CHARS) {
+        text[chars] = name[chars];
+        chars++;
+    }
+    text[chars] = '\0';
+
+    uint32_t width = chars * FONT_WIDTH + 2 * TOOLTIP_PAD_X;
+    uint32_t center = taskbar_slot_center_x(slot);
+
+    uint32_t x = 0;
+    if (center > width / 2) {
+        x = center - width / 2;
+    }
+    if (x + width > screen_w) {
+        x = (screen_w > width) ? screen_w - width : 0;
+    }
+
+    tooltip_x = x;
+    tooltip_y = screen_h - TASKBAR_HEIGHT - TOOLTIP_GAP - TOOLTIP_H;
+    tooltip_w = width;
+
+    mouse_hide_cursor();
+
+    for (uint32_t row = 0; row < TOOLTIP_H; row++) {
+        for (uint32_t col = 0; col < tooltip_w; col++) {
+            tooltip_saved[row][col] = gfx_get_pixel(tooltip_x + col, tooltip_y + row);
+        }
+    }
+
+    gfx_fill_rect(tooltip_x, tooltip_y, tooltip_w, TOOLTIP_H, TOOLTIP_COLOR);
+    gfx_draw_rect_outline(tooltip_x, tooltip_y, tooltip_w, TOOLTIP_H, GFX_WHITE);
+    gfx_draw_string(tooltip_x + TOOLTIP_PAD_X, tooltip_y + TOOLTIP_PAD_Y, text, GFX_WHITE);
+
+    tooltip_up = 1;
+}
+
+static void tooltip_hide(void) {
+    if (!tooltip_up) {
+        return;
+    }
+
+    mouse_hide_cursor();
+
+    for (uint32_t row = 0; row < TOOLTIP_H; row++) {
+        for (uint32_t col = 0; col < tooltip_w; col++) {
+            gfx_put_pixel(tooltip_x + col, tooltip_y + row, tooltip_saved[row][col]);
+        }
+    }
+
+    tooltip_up = 0;
+}
+
+// drops the tooltip without restoring, for when the screen is about to be repainted anyway
+static void tooltip_forget(void) {
+    tooltip_up = 0;
+}
+
+// --- hover ---
+
+static void reset_hover(void) {
+    hover_tile = -1;
+    hover_slot = -1;
+    hover_title = TITLE_BAR_HIT_NONE;
+
+    taskbar_set_hover(-1);
+    title_bar_set_hover(TITLE_BAR_HIT_NONE);
+    tooltip_forget();
+}
+
+static void update_hover(int32_t mouse_x, int32_t mouse_y) {
+    if (mouse_x == last_mouse_x && mouse_y == last_mouse_y) {
+        return;
+    }
+    last_mouse_x = mouse_x;
+    last_mouse_y = mouse_y;
+
+    const app_t* app = running_app;
+
+    int tile = -1;
+    title_bar_hit_t title = TITLE_BAR_HIT_NONE;
+    if (app == 0) {
+        tile = button_find_at(home_buttons, app_count, mouse_x, mouse_y);
+    } else {
+        title = title_bar_hit_test(mouse_x, mouse_y);
+    }
+    int slot = taskbar_hit_test(mouse_x, mouse_y);
+
+    if (tile != hover_tile) {
+        int old_tile = hover_tile;
+        hover_tile = tile;
+
+        mouse_hide_cursor();
+        if (old_tile >= 0) {
+            draw_home_tile(old_tile);
+        }
+        if (tile >= 0) {
+            draw_home_tile(tile);
+        }
+    }
+
+    if (app != 0 && title != hover_title) {
+        hover_title = title;
+        title_bar_set_hover(title);
+
+        mouse_hide_cursor();
+        title_bar_draw(app->name);
+    }
+
+    if (slot != hover_slot) {
+        hover_slot = slot;
+        tooltip_hide();
+        taskbar_set_hover(slot);
+
+        mouse_hide_cursor();
+        draw_taskbar();
+
+        if (slot >= 0) {
+            tooltip_show(slot);
+        }
+    }
+}
+
 static void show_home_screen(void) {
     running_app = 0;
     menu_close();
     prompt_close();
     dialog_close();
     mouse_left_clicked();
+    reset_hover();
     draw_home_screen();
 }
 
@@ -234,6 +398,7 @@ static void show_home_screen(void) {
 
 static void launch_app(int index) {
     mouse_hide_cursor();
+    reset_hover();
 
     if (app_state[index] == APP_STATE_MINIMIZED && apps[index].redraw != 0) {
         apps[index].redraw();
@@ -436,6 +601,7 @@ static void handle_dialog_click(int32_t x, int32_t y) {
 // --- keyboard ---
 
 static void launcher_handle_key(char c) {
+    tooltip_hide();
     const app_t* app = running_app;
 
     if (app == 0) {
@@ -523,6 +689,8 @@ void launcher_update(void) {
         }
         return;
     }
+
+    update_hover(mouse_x, mouse_y);
 
     if (clicked) {
         int slot = taskbar_hit_test(mouse_x, mouse_y);

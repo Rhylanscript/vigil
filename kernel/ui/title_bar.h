@@ -13,6 +13,7 @@ typedef enum {
 } title_bar_hit_t;
 
 void title_bar_draw(const char* title);
+void title_bar_set_hover(title_bar_hit_t hit);
 
 title_bar_hit_t title_bar_hit_test(int32_t px, int32_t py);
 

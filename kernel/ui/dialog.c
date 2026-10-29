@@ -18,9 +18,9 @@
 #define MESSAGE_Y_OFFSET    38
 #define BUTTON_Y_OFFSET     72
 
-#define BUTTON_W            112
-#define BUTTON_H            32
-#define BUTTON_GAP          12
+#define DIALOG_BUTTON_W            112
+#define DIALOG_BUTTON_H            32
+#define DIALOG_BUTTON_GAP          12
 
 #define TEXT_MAX            48
 
@@ -74,14 +74,14 @@ static void place_box(void) {
 }
 
 static void place_buttons(const char* const* labels, int count) {
-    uint32_t row_width = (uint32_t) count * BUTTON_W + (uint32_t) (count - 1) * BUTTON_GAP;
+    uint32_t row_width = (uint32_t) count * DIALOG_BUTTON_W + (uint32_t) (count - 1) * DIALOG_BUTTON_GAP;
     uint32_t start_x = box_x + (BOX_WIDTH - row_width) / 2;
 
     for (int i = 0; i < count; i++) {
-        buttons[i].x = start_x + (uint32_t) i * (BUTTON_W + BUTTON_GAP);
+        buttons[i].x = start_x + (uint32_t) i * (DIALOG_BUTTON_W + DIALOG_BUTTON_GAP);
         buttons[i].y = box_y + BUTTON_Y_OFFSET;
-        buttons[i].width = BUTTON_W;
-        buttons[i].height = BUTTON_H;
+        buttons[i].width = DIALOG_BUTTON_W;
+        buttons[i].height = DIALOG_BUTTON_H;
         buttons[i].label = labels[i];
         buttons[i].color = BUTTON_COLOR;
         buttons[i].on_click = 0;
