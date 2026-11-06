@@ -38,7 +38,7 @@ The Terminal is a Command line shell built into the kernel with an 8 entry comma
 
 ### Notepad
 
-A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. Defaults to editing the file `records/notes`. Using the `edit` command in shell allows editing of any file.
+A text editor with a blinking cursor, arrow keys, Home, End, Delete, Backspace and Tab. `Ctrl+S` saves and `Ctrl+O` opens a file by path (a path that doesn't exist starts a new note there). Defaults to editing the file `records/notes`. Using the `edit` command in shell allows editing of any file. Closing with `X` while there are unsaved changes asks whether to Save, Discard or Cancel.
 
 ### Files
 
