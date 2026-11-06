@@ -165,6 +165,8 @@ static void keyboard_callback(struct registers regs) {
     if (ctrl_held) {
         if (lower == 's') {
             key_queue_push(KEY_CTRL_S);
+        } else if (lower == 'o') {
+            key_queue_push(KEY_CTRL_O);
         }
         return;
     }
