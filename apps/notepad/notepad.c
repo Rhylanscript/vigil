@@ -22,7 +22,7 @@ static const vigil_api_t* api = 0;
 
 #define STATUS_ROWS         1
 #define STATUS_TEXT_X       8
-#define STATUS_LINE_MAX     120
+#define STATUS_LINE_MAX     128
 
 #define NOTE_FG             GFX_WHITE
 #define NOTE_BG             GFX_BLACK
@@ -229,7 +229,7 @@ static void draw_status(void) {
     line[0] = '\0';
 
     append_text(line, &pos, file_path);
-    append_text(line, &pos, "  |  Ctrl+S: save  |  ");
+    append_text(line, &pos, "  |  Ctrl+S: save  Ctrl+O: open  |  ");
 
     api->kuitoa((uint32_t) length, number);
     append_text(line, &pos, number);
@@ -562,6 +562,29 @@ static void notepad_open_file(const char* path) {
     open_file(path);
 }
 
+// --- open prompt ---
+
+static void start_open_prompt(void) {
+    api->mouse_hide_cursor();
+
+    if (dirty) {
+        status_note = "unsaved changes - press Ctrl+S first";
+        draw_status();
+        return;
+    }
+
+    const char* initial = "";
+    if (api->kstrlen(file_path) < PROMPT_BUFFER_SIZE) {
+        initial = file_path;
+    }
+
+    api->prompt_open("Open file (new path = new note):", initial, FS_MAX_PATH - 1, "");
+}
+
+static void notepad_prompt_done(const char* path) {
+    open_file(path);
+}
+
 // --- close dialog ---
 
 static const char* const close_labels[3] = {
@@ -618,6 +641,8 @@ static void notepad_redraw(void) {
 static void notepad_handle_char(char c) {
     if (c == KEY_CTRL_S) {
         save_note();
+    } else if (c == KEY_CTRL_O) {
+        start_open_prompt();
     } else if (c == '\b') {
         backspace();
     } else if (c == KEY_DELETE) {
@@ -693,6 +718,7 @@ int app_entry(const vigil_api_t* kernel_api, app_t* out_app) {
     out_app->on_tick = notepad_update_cursor;
     out_app->on_click = notepad_handle_click;
     out_app->on_open_file = notepad_open_file;
+    out_app->on_prompt_done = notepad_prompt_done;
     out_app->on_close_request = notepad_close_request;
     out_app->on_dialog_done = notepad_dialog_done;
     out_app->icon = notepad_icon;

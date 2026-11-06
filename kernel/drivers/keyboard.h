@@ -6,6 +6,7 @@
 #define KEY_ESCAPE      27
 
 #define KEY_CTRL_S      0x13
+#define KEY_CTRL_O      0x0f
 
 #define KEY_ARROW_UP    0x01
 #define KEY_ARROW_DOWN  0x02
